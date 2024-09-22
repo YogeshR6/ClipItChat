@@ -1,21 +1,28 @@
-"use client"
+"use client";
 
-import Link from "next/link"
+import Link from "next/link";
+import ProfileAvatar from "./ProfileAvatar";
 
 export function TopBar() {
   return (
-    <div className="flex flex-row justify-between w-full items-center z-10 h-10 mb-2">
-      <div>
-        Logo Here
+    <div className="flex flex-row justify-between w-full items-center z-10 mb-2 bg-blue-500/[0.3] p-3">
+      <div>Logo Here</div>
+      <div className="flex flex-row gap-5">
+        <Link href="/" className="bg-blue-500/[0.5] p-2 rounded-md">
+          Home
+        </Link>
+        <Link href="/posts" className="bg-blue-500/[0.5] p-2 rounded-md">
+          Posts
+        </Link>
+        <Link href="/upload" className="bg-blue-500/[0.5] p-2 rounded-md">
+          Upload
+        </Link>
       </div>
-      <div className="flex flex-row gap-4">
-        <Link href="/">Home</Link>
-        <Link href="/posts">Posts</Link>
-        <Link href="/upload">Upload</Link>
-      </div>
       <div>
-        User Info Here
+        <Link href="/auth">
+          <ProfileAvatar />
+        </Link>
       </div>
     </div>
-  )
+  );
 }
