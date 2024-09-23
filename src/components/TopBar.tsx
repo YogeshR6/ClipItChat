@@ -8,13 +8,13 @@ export function TopBar() {
     <div className="flex flex-row justify-between w-full items-center z-10 mb-2 bg-blue-500/[0.3] p-3">
       <div>Logo Here</div>
       <div className="flex flex-row gap-5">
-        <Link href="/" className="bg-blue-500/[0.5] p-2 rounded-md">
+        <Link href="/" className="bg-blue-500/[0.4] p-2 rounded-md">
           Home
         </Link>
-        <Link href="/posts" className="bg-blue-500/[0.5] p-2 rounded-md">
+        <Link href="/posts" className="bg-blue-500/[0.4] p-2 rounded-md">
           Posts
         </Link>
-        <Link href="/upload" className="bg-blue-500/[0.5] p-2 rounded-md">
+        <Link href="/upload" className="bg-blue-500/[0.4] p-2 rounded-md">
           Upload
         </Link>
       </div>

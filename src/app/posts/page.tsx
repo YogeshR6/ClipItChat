@@ -1,9 +1,13 @@
-import React from 'react'
+import React from "react";
+import PostsCards from "@/components/PostsCards";
 
 const PostsPage: React.FC = () => {
   return (
-    <div>This is Posts Page!!</div>
-  )
-}
+    <div className="w-full">
+      <h1>This is Posts Page!!</h1>
+      <PostsCards />
+    </div>
+  );
+};
 
-export default PostsPage
+export default PostsPage;
