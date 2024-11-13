@@ -28,6 +28,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col items-center justify-center`}
+        style={{ backgroundImage: `url('/rdr.png')`, backgroundSize: "cover" }}
       >
         <AuthProvider>
           <TopBar />
