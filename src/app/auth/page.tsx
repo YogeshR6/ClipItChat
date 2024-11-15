@@ -1,9 +1,12 @@
 import React from 'react'
+import AuthPage from '@/pages/AuthPage'
 
-const AuthPage: React.FC = () => {
+const page: React.FC = () => {
   return (
-    <div>This is Auth Page!!</div>
+    <>
+      <AuthPage />
+    </>
   )
 }
 
-export default AuthPage
+export default page
