@@ -16,7 +16,9 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <TopBar />
+        <div className="mt-16">
         {children}
+        </div>
       </body>
     </html>
   );
