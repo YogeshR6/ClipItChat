@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import TopBar from "@/components/TopBar";
+import { AuthProvider } from "@/hooks/contexts/AuthContext";
 
 export const metadata: Metadata = {
   title: "Clip It Chat",
@@ -15,10 +16,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <TopBar />
-        <div className="mt-16">
-        {children}
-        </div>
+        <AuthProvider>
+          <TopBar />
+          <div className="mt-16">{children}</div>
+        </AuthProvider>
       </body>
     </html>
   );

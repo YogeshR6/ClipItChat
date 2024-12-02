@@ -16,17 +16,31 @@ const AuthPage: React.FC = () => {
     passwordConfirm: "",
   });
 
-  const handleUserLogin = () => {
-    userSignInWithEmailAndPassword(formData.email, formData.password);
+  const handleUserLogin = async () => {
+    try {
+      const userSignInWithEmailAndPasswordResult =
+        await userSignInWithEmailAndPassword(formData.email, formData.password);
+      if (userSignInWithEmailAndPasswordResult) {
+        console.log("login success");
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleFormDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleUserSignUpWithGoogle = () => {
-    const userSignUpWithGoogleResult = userSignInWithGoogle();
-    console.log(userSignUpWithGoogleResult);
+  const handleUserSignUpWithGoogle = async () => {
+    try {
+      const userSignUpWithGoogleResult = await userSignInWithGoogle();
+      if (userSignUpWithGoogleResult) {
+        console.log("login success");
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -36,6 +50,7 @@ const AuthPage: React.FC = () => {
         <Input
           id="email"
           placeholder="Email"
+          name="email"
           value={formData.email}
           onChange={handleFormDataChange}
           required
@@ -43,14 +58,15 @@ const AuthPage: React.FC = () => {
         <Input
           id="password"
           placeholder="Password"
-          value={formData.email}
+          name="password"
+          value={formData.password}
           onChange={handleFormDataChange}
           required
         />
         <div className="flex gap-5">
           <Button onClick={handleUserLogin}>Login</Button>
           <Button variant="outline" onClick={handleUserSignUpWithGoogle}>
-            <FcGoogle /> Login with Email
+            <FcGoogle /> Login with Google
           </Button>
         </div>
       </div>
