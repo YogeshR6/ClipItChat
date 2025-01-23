@@ -26,7 +26,7 @@ const TopBar: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-row justify-between w-full items-center fixed top-0 z-10 p-3">
+    <div className="flex flex-row justify-between w-full items-center p-3">
       <div>Logo Here</div>
       <div className="flex flex-row gap-5">
         <Link href="/" className="p-2 rounded-md">

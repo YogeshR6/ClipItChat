@@ -4,20 +4,17 @@ import React from "react";
 import { useAuth } from "@/hooks/contexts/AuthContext";
 const HomePage = () => {
   const { user, isLoggedIn } = useAuth();
-  console.log("user", user);
   return (
-    <>
-      <div>HomePage</div>
+    <div>
+      <h2 className="text-3xl font-semibold tracking-tight first:mt-0">
+        HomePage
+      </h2>
       {isLoggedIn ? (
-        <div>
-          <div>Logged in as {user.displayName || user.email}</div>
-        </div>
+        <h3>Logged in as {user.displayName || user.email}</h3>
       ) : (
-        <div>
-          <div>Not logged in</div>
-        </div>
+        <h3>Not logged in</h3>
       )}
-    </>
+    </div>
   );
 };
 

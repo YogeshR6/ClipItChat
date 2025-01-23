@@ -7,6 +7,7 @@ import {
   userSignInWithGoogle,
 } from "@/utils/authFunctions";
 import { FcGoogle } from "react-icons/fc";
+import { useRouter } from "next/navigation";
 
 const AuthPage: React.FC = () => {
   const [formType, setFormType] = useState("login");
@@ -16,12 +17,14 @@ const AuthPage: React.FC = () => {
     passwordConfirm: "",
   });
 
+  const router = useRouter();
+
   const handleUserLogin = async () => {
     try {
       const userSignInWithEmailAndPasswordResult =
         await userSignInWithEmailAndPassword(formData.email, formData.password);
       if (userSignInWithEmailAndPasswordResult) {
-        console.log("login success");
+        router.push("/");
       }
     } catch (error) {
       console.error(error);
@@ -36,7 +39,7 @@ const AuthPage: React.FC = () => {
     try {
       const userSignUpWithGoogleResult = await userSignInWithGoogle();
       if (userSignUpWithGoogleResult) {
-        console.log("login success");
+        router.push("/");
       }
     } catch (error) {
       console.error(error);

@@ -17,8 +17,10 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
-          <TopBar />
-          <div className="mt-16">{children}</div>
+          <div className="w-[100dvw] h-[100dvh]">
+            <TopBar />
+            {children}
+          </div>
         </AuthProvider>
       </body>
     </html>
