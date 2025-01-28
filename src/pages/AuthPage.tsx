@@ -10,6 +10,7 @@ import {
 import { FcGoogle } from "react-icons/fc";
 import { useRouter } from "next/navigation";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { handleUserSignUpAddToCollection } from "@/utils/userFunctions";
 
 const AuthPage: React.FC = () => {
   const [formType, setFormType] = useState("login");
@@ -26,20 +27,22 @@ const AuthPage: React.FC = () => {
 
   const router = useRouter();
 
-  const handleUserLogin = async (e) => {
+  const handleUserLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!formData.password || !formData.email) {
       setError("Please fill all fields");
       return;
     }
     try {
-      const userSignInWithEmailAndPasswordResult =
-        await userSignInWithEmailAndPassword(formData.email, formData.password);
-      if (userSignInWithEmailAndPasswordResult) {
+      const { user } = await userSignInWithEmailAndPassword(
+        formData.email,
+        formData.password
+      );
+      if (user) {
         router.push("/");
       }
     } catch (error) {
-      setError("Invalid email or password");
+      handleAuthError(error);
     }
   };
 
@@ -56,19 +59,21 @@ const AuthPage: React.FC = () => {
 
   const handleUserSignUpWithGoogle = async () => {
     try {
-      const userSignUpWithGoogleResult = await userSignInWithGoogle();
-      if (userSignUpWithGoogleResult) {
-        setError("");
-        router.push("/");
+      const { user } = await userSignInWithGoogle();
+      if (user?.email) {
+        const userSignUpResponse = await handleUserSignUpAddToCollection(
+          user.email
+        );
+        if (userSignUpResponse) router.push("/");
       }
-    } catch (error) {
-      setError("Something went wrong!");
+    } catch (error: any) {
+      handleAuthError(error);
     }
   };
 
-  const handleUserSignUp = async (e) => {
+  const handleUserSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!formData.password || !formData.email) {
+    if (!formData.password || !formData.email || !formData.passwordConfirm) {
       setError("Please fill all fields");
       return;
     }
@@ -77,13 +82,49 @@ const AuthPage: React.FC = () => {
       return;
     }
     try {
-      const userSignUpWithEmailAndPasswordResult =
-        await userSignUpWithEmailAndPassword(formData.email, formData.password);
-      if (userSignUpWithEmailAndPasswordResult) {
-        router.push("/");
+      const { user } = await userSignUpWithEmailAndPassword(
+        formData.email,
+        formData.password
+      );
+      if (user?.email) {
+        const userSignUpResponse = await handleUserSignUpAddToCollection(
+          user.email
+        );
+        if (userSignUpResponse) router.push("/");
       }
-    } catch (error) {
-      setError("Something went wrong!");
+    } catch (error: any) {
+      handleAuthError(error);
+    }
+  };
+
+  const handleAuthError = (error: any) => {
+    switch (error.code) {
+      case "auth/email-already-in-use":
+        setError("Email is already in use. Please try logging in.");
+        break;
+      case "auth/invalid-email":
+        setError("Invalid email address. Please check your input.");
+        break;
+      case "auth/user-not-found":
+        setError("No account found with this email. Please sign up first.");
+        break;
+      case "auth/wrong-password":
+        setError("Incorrect password. Please try again.");
+        break;
+      case "auth/weak-password":
+        setError("Password is too weak. Use at least 6 characters.");
+        break;
+      case "auth/invalid-credential":
+        setError("Invalid credentials. Please check your email and password.");
+        break;
+      case "auth/network-request-failed":
+        setError("Network error. Please check your internet connection.");
+        break;
+      case "auth/too-many-requests":
+        setError("Too many failed attempts. Please try again later.");
+        break;
+      default:
+        setError("An unexpected error occurred. Please try again.");
     }
   };
 
@@ -96,7 +137,10 @@ const AuthPage: React.FC = () => {
       <h1>Auth Page</h1>
       <div className="flex flex-col justify-center items-center gap-1 w-max min-w-[300px]">
         <h1>{formType === "login" ? "Login" : "Sign up"}</h1>
-        <form onSubmit={handleUserLogin} className="flex flex-col gap-3 w-full">
+        <form
+          onSubmit={formType === "login" ? handleUserLogin : handleUserSignUp}
+          className="flex flex-col gap-3 w-full"
+        >
           <Input
             id="email"
             placeholder="Email*"
@@ -145,11 +189,7 @@ const AuthPage: React.FC = () => {
           <div className="flex gap-5 w-full justify-center items-center">
             {formType === "signup" ? (
               <>
-                <Button
-                  onClick={handleUserSignUp}
-                  type="submit"
-                  className="w-1/2"
-                >
+                <Button type="submit" className="w-1/2">
                   Sign up
                 </Button>
                 <Button
@@ -163,11 +203,7 @@ const AuthPage: React.FC = () => {
               </>
             ) : (
               <>
-                <Button
-                  onClick={handleUserLogin}
-                  type="submit"
-                  className="w-1/2"
-                >
+                <Button type="submit" className="w-1/2">
                   Login
                 </Button>
                 <Button
@@ -181,7 +217,11 @@ const AuthPage: React.FC = () => {
               </>
             )}
           </div>
-          <Button variant="outline" onClick={handleUserSignUpWithGoogle}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleUserSignUpWithGoogle}
+          >
             <FcGoogle /> Login with Google
           </Button>
         </form>
