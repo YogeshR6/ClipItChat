@@ -8,16 +8,26 @@ type UserType = {
   email: string;
   uid: string;
   photoUrl?: string;
+  fName?: string;
+  lName?: string;
+  username?: string;
 };
 
 interface AuthContextType {
-  user: UserType | null;
-  setUser: React.Dispatch<React.SetStateAction<UserType | null>>;
+  user: UserType;
+  setUser: React.Dispatch<React.SetStateAction<UserType>>;
   isLoggedIn: boolean;
   setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
 }
 const AuthContext = createContext<AuthContextType>({
-  user: null,
+  user: {
+    email: "",
+    uid: "",
+    photoUrl: "",
+    fName: "",
+    lName: "",
+    username: "",
+  },
   setUser: () => {},
   isLoggedIn: false,
   setIsLoggedIn: () => {},
@@ -27,7 +37,14 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UserType | null>(null);
+  const [user, setUser] = useState<UserType>({
+    email: "",
+    uid: "",
+    photoUrl: "",
+    fName: "",
+    lName: "",
+    username: "",
+  });
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   useEffect(() => {
@@ -41,7 +58,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
         setIsLoggedIn(true);
       } else {
-        setUser(null);
+        setUser({
+          email: "",
+          uid: "",
+          photoUrl: "",
+          fName: "",
+          lName: "",
+          username: "",
+        });
         setIsLoggedIn(false);
       }
     });
