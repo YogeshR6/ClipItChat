@@ -10,7 +10,6 @@ import {
 import { FcGoogle } from "react-icons/fc";
 import { useRouter } from "next/navigation";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { handleUserSignUpAddToCollection } from "@/utils/userFunctions";
 
 const AuthPage: React.FC = () => {
   const [formType, setFormType] = useState("login");
@@ -59,13 +58,8 @@ const AuthPage: React.FC = () => {
 
   const handleUserSignUpWithGoogle = async () => {
     try {
-      const { user } = await userSignInWithGoogle();
-      if (user?.email) {
-        const userSignUpResponse = await handleUserSignUpAddToCollection(
-          user.email
-        );
-        if (userSignUpResponse) router.push("/");
-      }
+      const userSignUpResponse = await userSignInWithGoogle();
+      if (userSignUpResponse) router.push("/");
     } catch (error: any) {
       handleAuthError(error);
     }
@@ -82,16 +76,11 @@ const AuthPage: React.FC = () => {
       return;
     }
     try {
-      const { user } = await userSignUpWithEmailAndPassword(
+      const userSignUpResponse = await userSignUpWithEmailAndPassword(
         formData.email,
         formData.password
       );
-      if (user?.email) {
-        const userSignUpResponse = await handleUserSignUpAddToCollection(
-          user.email
-        );
-        if (userSignUpResponse) router.push("/");
-      }
+      if (userSignUpResponse) router.push("/");
     } catch (error: any) {
       handleAuthError(error);
     }

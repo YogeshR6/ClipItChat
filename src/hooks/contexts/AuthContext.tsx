@@ -1,35 +1,47 @@
 "use client";
-import { createContext, useState, useContext, useEffect } from "react";
+import React, { createContext, useState, useContext, useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/utils/firebase";
+import { getUserDetailsFromUid } from "@/utils/userFunctions";
+
+type UserType = {
+  email: string;
+  uid: string;
+  photoUrl?: string;
+};
 
 interface AuthContextType {
-  user: any;
-  setUser: any;
+  user: UserType | null;
+  setUser: React.Dispatch<React.SetStateAction<UserType | null>>;
   isLoggedIn: boolean;
-  setIsLoggedIn: any;
+  setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
 }
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  setUser: null,
+  setUser: () => {},
   isLoggedIn: false,
-  setIsLoggedIn: null,
+  setIsLoggedIn: () => {},
 });
 
 export function useAuth() {
   return useContext(AuthContext);
 }
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState({});
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<UserType | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setUser({ ...user.providerData[0] });
+        const userDetails = (await getUserDetailsFromUid(user.uid)) as UserType;
+        setUser({
+          email: userDetails.email,
+          uid: userDetails.uid,
+          photoUrl: userDetails.photoUrl,
+        });
         setIsLoggedIn(true);
       } else {
-        setUser({});
+        setUser(null);
         setIsLoggedIn(false);
       }
     });
