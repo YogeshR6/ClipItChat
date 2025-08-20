@@ -3,23 +3,29 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/contexts/AuthContext";
+import { updateUserDetailsInFirestore } from "@/utils/userFunctions";
 import React, { useState } from "react";
 import { VscAccount } from "react-icons/vsc";
 
 function MyProfilePage() {
-  const { user } = useAuth();
-
-  const [updateUserData, setUpdateUserData] = useState(user);
+  const { user, setUser } = useAuth();
+  const [isUserEditingDetails, setIsUserEditingDetails] =
+    useState<boolean>(false);
 
   const handleUserDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setUpdateUserData((prevUser) => {
+    setUser((prevUser) => {
       if (!prevUser) return prevUser;
       return {
         ...prevUser,
         [name]: value,
       };
     });
+  };
+
+  const handleUpdateUserData = async () => {
+    await updateUserDetailsInFirestore(user.uid, user);
+    setIsUserEditingDetails(false);
   };
 
   return (
@@ -43,6 +49,7 @@ function MyProfilePage() {
               type="file"
               accept="image/*"
               className="hidden"
+              disabled
               onChange={(e) => {
                 // handle image upload here
                 const file = e.target.files?.[0];
@@ -56,49 +63,57 @@ function MyProfilePage() {
             id="username"
             placeholder="Username"
             name="username"
-            value={updateUserData?.username}
+            value={user.username}
             onChange={handleUserDataChange}
+            disabled={!isUserEditingDetails}
           />
+          {!isUserEditingDetails && (
+            <Button
+              type="button"
+              className=""
+              onClick={() => setIsUserEditingDetails(true)}
+            >
+              Edit
+            </Button>
+          )}
         </div>
         <div className="flex flex-row items-center justify-between w-full">
           <Input
             id="fName"
             placeholder="First Name"
             name="fName"
-            value={updateUserData?.fName}
+            value={user.fName}
             onChange={handleUserDataChange}
+            disabled={!isUserEditingDetails}
           />
           <Input
             id="lName"
             placeholder="Last Name"
             name="lName"
-            value={updateUserData?.lName}
+            value={user.lName}
             onChange={handleUserDataChange}
+            disabled={!isUserEditingDetails}
           />
         </div>
-        <div className="flex flex-row justify-between gap-5 items-center w-full">
-          <Button
-            type="button"
-            className="w-1/2"
-            onClick={() => {
-              // handle cancel logic here
-            }}
-            disabled={updateUserData === user}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={() => {
-              // handle save logic here
-            }}
-            variant="outline"
-            className="w-1/2"
-            type="submit"
-            disabled={updateUserData === user}
-          >
-            Save
-          </Button>
-        </div>
+        {isUserEditingDetails && (
+          <div className="flex flex-row justify-between gap-5 items-center w-full">
+            <Button
+              type="button"
+              className="w-1/2"
+              onClick={() => setIsUserEditingDetails(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateUserData}
+              variant="outline"
+              className="w-1/2"
+              type="submit"
+            >
+              Save
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

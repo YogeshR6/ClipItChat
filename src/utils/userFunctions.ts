@@ -1,5 +1,14 @@
-import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDocs,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 import { db } from "./firebase";
+import { UserType } from "@/types/user";
 
 export const handleUserSignUpAddToCollection = async (
   email: string,
@@ -8,7 +17,7 @@ export const handleUserSignUpAddToCollection = async (
   try {
     const userSignUpResponse = await addDoc(collection(db, "users"), {
       email: email,
-      uid: uid,
+      authUid: uid,
     });
     return userSignUpResponse;
   } catch (error) {
@@ -16,13 +25,29 @@ export const handleUserSignUpAddToCollection = async (
   }
 };
 
-export const getUserDetailsFromUid = async (uid: string) => {
+export const getUserDetailsFromAuthUid = async (authUid: string) => {
   try {
-    const q = query(collection(db, "users"), where("uid", "==", uid));
+    const q = query(collection(db, "users"), where("authUid", "==", authUid));
     const userDocs = await getDocs(q);
+
     if (!userDocs.empty) {
-      return userDocs.docs[0].data();
+      return {
+        ...userDocs.docs[0].data(),
+        uid: userDocs.docs[0].id,
+      };
     }
+  } catch (error) {
+    return error;
+  }
+};
+
+export const updateUserDetailsInFirestore = async (
+  uid: string,
+  userDetails: Partial<UserType>
+) => {
+  try {
+    const userRef = doc(db, "users", uid);
+    await updateDoc(userRef, userDetails);
   } catch (error) {
     return error;
   }

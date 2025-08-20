@@ -2,16 +2,8 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/utils/firebase";
-import { getUserDetailsFromUid } from "@/utils/userFunctions";
-
-type UserType = {
-  email: string;
-  uid: string;
-  photoUrl?: string;
-  fName?: string;
-  lName?: string;
-  username?: string;
-};
+import { getUserDetailsFromAuthUid } from "@/utils/userFunctions";
+import { UserType } from "@/types/user";
 
 interface AuthContextType {
   user: UserType;
@@ -50,11 +42,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const userDetails = (await getUserDetailsFromUid(user.uid)) as UserType;
+        const userDetails = (await getUserDetailsFromAuthUid(
+          user.uid
+        )) as UserType;
         setUser({
           email: userDetails.email,
           uid: userDetails.uid,
           photoUrl: userDetails.photoUrl,
+          fName: userDetails.fName,
+          lName: userDetails.lName,
+          username: userDetails.username,
         });
         setIsLoggedIn(true);
       } else {
