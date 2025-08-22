@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/contexts/AuthContext";
+import { UserType } from "@/types/user";
 import { updateUserDetailsInFirestore } from "@/utils/userFunctions";
 import React, { useState } from "react";
 import { VscAccount } from "react-icons/vsc";
@@ -11,10 +12,13 @@ function MyProfilePage() {
   const { user, setUser } = useAuth();
   const [isUserEditingDetails, setIsUserEditingDetails] =
     useState<boolean>(false);
+  const [updatedUserDetails, setUpdatedUserDetails] = useState<
+    Partial<UserType>
+  >({});
 
   const handleUserDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setUser((prevUser) => {
+    setUpdatedUserDetails((prevUser) => {
       if (!prevUser) return prevUser;
       return {
         ...prevUser,
@@ -24,8 +28,68 @@ function MyProfilePage() {
   };
 
   const handleUpdateUserData = async () => {
-    await updateUserDetailsInFirestore(user.uid, user);
+    await updateUserDetailsInFirestore(user.uid, updatedUserDetails);
     setIsUserEditingDetails(false);
+    setUser((prevUser) => {
+      return {
+        ...prevUser,
+        ...updatedUserDetails,
+      };
+    });
+  };
+
+  const handleEditClick = () => {
+    setIsUserEditingDetails(true);
+    setUpdatedUserDetails({
+      username: user.username,
+      fName: user.fName,
+      lName: user.lName,
+    });
+  };
+
+  const handleUserProfilePhotoUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        // 1. Get a signature from our API route
+        const timestamp = Math.round(new Date().getTime() / 1000);
+        const paramsToSign = { timestamp };
+
+        const signatureResponse = await fetch("/api/sign-upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paramsToSign }),
+        });
+        const { signature } = await signatureResponse.json();
+
+        // 2. Upload the file directly to Cloudinary
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("timestamp", timestamp.toString());
+        formData.append("signature", signature);
+        formData.append("api_key", process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY!);
+
+        const uploadUrl = `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`;
+
+        const uploadResponse = await fetch(uploadUrl, {
+          method: "POST",
+          body: formData,
+        });
+
+        const uploadedImageData = await uploadResponse.json();
+        await updateUserDetailsInFirestore(user.uid, {
+          photoUrl: uploadedImageData.secure_url,
+        });
+        setUser((prevUser) => ({
+          ...prevUser,
+          photoUrl: uploadedImageData.secure_url,
+        }));
+      } catch (error) {
+        console.error("Upload failed:", error);
+      }
+    }
   };
 
   return (
@@ -36,7 +100,7 @@ function MyProfilePage() {
           <label htmlFor="avatar-upload" className="cursor-pointer">
             <Avatar className="h-16 w-16">
               <AvatarImage
-                src={user?.photoUrl}
+                src={user.photoUrl}
                 alt="profile image"
                 style={{ fontSize: 64 }}
               />
@@ -49,30 +113,21 @@ function MyProfilePage() {
               type="file"
               accept="image/*"
               className="hidden"
-              disabled
-              onChange={(e) => {
-                // handle image upload here
-                const file = e.target.files?.[0];
-                if (file) {
-                  // You can add your upload logic here
-                }
-              }}
+              onChange={handleUserProfilePhotoUpload}
             />
           </label>
           <Input
             id="username"
             placeholder="Username"
             name="username"
-            value={user.username}
+            value={
+              isUserEditingDetails ? updatedUserDetails.username : user.username
+            }
             onChange={handleUserDataChange}
             disabled={!isUserEditingDetails}
           />
           {!isUserEditingDetails && (
-            <Button
-              type="button"
-              className=""
-              onClick={() => setIsUserEditingDetails(true)}
-            >
+            <Button type="button" className="" onClick={handleEditClick}>
               Edit
             </Button>
           )}
@@ -82,7 +137,7 @@ function MyProfilePage() {
             id="fName"
             placeholder="First Name"
             name="fName"
-            value={user.fName}
+            value={isUserEditingDetails ? updatedUserDetails.fName : user.fName}
             onChange={handleUserDataChange}
             disabled={!isUserEditingDetails}
           />
@@ -90,7 +145,7 @@ function MyProfilePage() {
             id="lName"
             placeholder="Last Name"
             name="lName"
-            value={user.lName}
+            value={isUserEditingDetails ? updatedUserDetails.lName : user.lName}
             onChange={handleUserDataChange}
             disabled={!isUserEditingDetails}
           />

@@ -18,6 +18,10 @@ export const handleUserSignUpAddToCollection = async (
     const userSignUpResponse = await addDoc(collection(db, "users"), {
       email: email,
       authUid: uid,
+      photoUrl: "",
+      fName: "",
+      lName: "",
+      username: "",
     });
     return userSignUpResponse;
   } catch (error) {
