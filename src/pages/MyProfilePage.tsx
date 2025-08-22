@@ -6,11 +6,19 @@ import { useAuth } from "@/hooks/contexts/AuthContext";
 import { UserType } from "@/types/user";
 import { uploadProfilePhotoToCloudinary } from "@/utils/cloudinaryFunctions";
 import { updateUserDetailsInFirestore } from "@/utils/userFunctions";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { VscAccount } from "react-icons/vsc";
 
 function MyProfilePage() {
-  const { user, setUser } = useAuth();
+  const { user, setUser, isLoggedIn } = useAuth();
+  const router = useRouter();
+
+  if (!isLoggedIn) {
+    router.push("/auth");
+    return <></>;
+  }
+
   const [isUserEditingDetails, setIsUserEditingDetails] =
     useState<boolean>(false);
   const [updatedUserDetails, setUpdatedUserDetails] = useState<
