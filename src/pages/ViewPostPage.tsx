@@ -11,12 +11,12 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (isLoggedIn === false) {
       router.replace("/auth");
     }
   }, [isLoggedIn, router]);
 
-  if (!isLoggedIn) {
+  if (isLoggedIn === false) {
     return <></>;
   }
 

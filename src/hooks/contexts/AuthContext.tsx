@@ -8,8 +8,8 @@ import { UserType } from "@/types/user";
 interface AuthContextType {
   user: UserType;
   setUser: React.Dispatch<React.SetStateAction<UserType>>;
-  isLoggedIn: boolean;
-  setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
+  isLoggedIn: boolean | null;
+  setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean | null>>;
 }
 const AuthContext = createContext<AuthContextType>({
   user: {
@@ -21,7 +21,7 @@ const AuthContext = createContext<AuthContextType>({
     username: "",
   },
   setUser: () => {},
-  isLoggedIn: false,
+  isLoggedIn: null,
   setIsLoggedIn: () => {},
 });
 
@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     lName: "",
     username: "",
   });
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
     onAuthStateChanged(auth, async (user) => {

@@ -5,4 +5,5 @@ export type UserType = {
   fName?: string;
   lName?: string;
   username?: string;
+  posts?: string[];
 };

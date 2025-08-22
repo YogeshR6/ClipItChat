@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/contexts/AuthContext";
 import { UserType } from "@/types/user";
-import { uploadProfilePhotoToCloudinary } from "@/utils/cloudinaryFunctions";
+import { uploadProfilePhotoToCloudinaryAndSaveUrlInFirestore } from "@/utils/cloudinaryFunctions";
 import { updateUserDetailsInFirestore } from "@/utils/userFunctions";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -15,7 +15,7 @@ function MyProfilePage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (isLoggedIn === false) {
       router.replace("/auth");
     }
   }, [isLoggedIn, router]);
@@ -62,10 +62,11 @@ function MyProfilePage() {
   ) => {
     const file = e.target.files?.[0];
     if (file) {
-      const uploadedImageData = await uploadProfilePhotoToCloudinary(
-        file,
-        user.uid
-      );
+      const uploadedImageData =
+        await uploadProfilePhotoToCloudinaryAndSaveUrlInFirestore(
+          file,
+          user.uid
+        );
       setUser((prevUser) => ({
         ...prevUser,
         photoUrl: uploadedImageData.secure_url,
@@ -73,7 +74,7 @@ function MyProfilePage() {
     }
   };
 
-  if (!isLoggedIn) {
+  if (isLoggedIn === false) {
     return <></>;
   }
 

@@ -1,5 +1,6 @@
 import {
   addDoc,
+  arrayUnion,
   collection,
   doc,
   getDocs,
@@ -22,6 +23,7 @@ export const handleUserSignUpAddToCollection = async (
       fName: "",
       lName: "",
       username: "",
+      posts: [],
     });
     return userSignUpResponse;
   } catch (error) {
@@ -52,6 +54,20 @@ export const updateUserDetailsInFirestore = async (
   try {
     const userRef = doc(db, "users", uid);
     await updateDoc(userRef, userDetails);
+  } catch (error) {
+    return error;
+  }
+};
+
+export const addNewUserPostInFirestore = async (
+  uid: string,
+  postId: string
+) => {
+  try {
+    const userRef = doc(db, "users", uid);
+    await updateDoc(userRef, {
+      posts: arrayUnion(postId),
+    });
   } catch (error) {
     return error;
   }
