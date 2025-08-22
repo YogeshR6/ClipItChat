@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/contexts/AuthContext";
 import { UserType } from "@/types/user";
+import { uploadProfilePhotoToCloudinary } from "@/utils/cloudinaryFunctions";
 import { updateUserDetailsInFirestore } from "@/utils/userFunctions";
 import React, { useState } from "react";
 import { VscAccount } from "react-icons/vsc";
@@ -52,43 +53,14 @@ function MyProfilePage() {
   ) => {
     const file = e.target.files?.[0];
     if (file) {
-      try {
-        // 1. Get a signature from our API route
-        const timestamp = Math.round(new Date().getTime() / 1000);
-        const paramsToSign = { timestamp };
-
-        const signatureResponse = await fetch("/api/sign-upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ paramsToSign }),
-        });
-        const { signature } = await signatureResponse.json();
-
-        // 2. Upload the file directly to Cloudinary
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("timestamp", timestamp.toString());
-        formData.append("signature", signature);
-        formData.append("api_key", process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY!);
-
-        const uploadUrl = `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`;
-
-        const uploadResponse = await fetch(uploadUrl, {
-          method: "POST",
-          body: formData,
-        });
-
-        const uploadedImageData = await uploadResponse.json();
-        await updateUserDetailsInFirestore(user.uid, {
-          photoUrl: uploadedImageData.secure_url,
-        });
-        setUser((prevUser) => ({
-          ...prevUser,
-          photoUrl: uploadedImageData.secure_url,
-        }));
-      } catch (error) {
-        console.error("Upload failed:", error);
-      }
+      const uploadedImageData = await uploadProfilePhotoToCloudinary(
+        file,
+        user.uid
+      );
+      setUser((prevUser) => ({
+        ...prevUser,
+        photoUrl: uploadedImageData.secure_url,
+      }));
     }
   };
 
