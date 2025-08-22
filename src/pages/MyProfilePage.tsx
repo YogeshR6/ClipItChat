@@ -7,17 +7,18 @@ import { UserType } from "@/types/user";
 import { uploadProfilePhotoToCloudinary } from "@/utils/cloudinaryFunctions";
 import { updateUserDetailsInFirestore } from "@/utils/userFunctions";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { VscAccount } from "react-icons/vsc";
 
 function MyProfilePage() {
   const { user, setUser, isLoggedIn } = useAuth();
   const router = useRouter();
 
-  if (!isLoggedIn) {
-    router.push("/auth");
-    return <></>;
-  }
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.replace("/auth");
+    }
+  }, [isLoggedIn, router]);
 
   const [isUserEditingDetails, setIsUserEditingDetails] =
     useState<boolean>(false);
@@ -71,6 +72,10 @@ function MyProfilePage() {
       }));
     }
   };
+
+  if (!isLoggedIn) {
+    return <></>;
+  }
 
   return (
     <div className="flex flex-col items-center justify-center m-24 gap-10">

@@ -1,5 +1,6 @@
 import { useAuth } from "@/hooks/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 interface ViewPostPageProps {
   postId: string;
@@ -9,8 +10,13 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
   const { isLoggedIn } = useAuth();
   const router = useRouter();
 
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.replace("/auth");
+    }
+  }, [isLoggedIn, router]);
+
   if (!isLoggedIn) {
-    router.push("/auth");
     return <></>;
   }
 

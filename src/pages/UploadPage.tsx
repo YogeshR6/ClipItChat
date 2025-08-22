@@ -2,14 +2,19 @@
 
 import { useAuth } from "@/hooks/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useEffect } from "react";
 
 const UploadPage: React.FC = () => {
   const { user, isLoggedIn } = useAuth();
   const router = useRouter();
 
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.replace("/auth");
+    }
+  }, [isLoggedIn, router]);
+
   if (!isLoggedIn) {
-    router.push("/auth");
     return <></>;
   }
 
