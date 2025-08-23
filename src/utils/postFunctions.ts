@@ -6,11 +6,13 @@ export const createNewPostImage = async (
   userUid: string
 ): Promise<string | Error> => {
   try {
+    const timestamp = new Date();
     const createNewPostImageResponse = await addDoc(collection(db, "posts"), {
       imageUrl: imageUrl,
       userUid: userUid,
       likes: 0,
       comments: [],
+      createdAt: timestamp,
     });
     return createNewPostImageResponse.id;
   } catch (error) {

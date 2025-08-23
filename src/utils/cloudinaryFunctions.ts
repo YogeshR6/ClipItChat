@@ -63,7 +63,7 @@ export const uploadProfilePhotoToCloudinaryAndSaveUrlInFirestore = async (
   }
 };
 
-export const uploadUserPostImageToCloudinary = async (
+export const uploadUserPostImageToCloudinaryAndSaveInfoInFirestore = async (
   file: File,
   userUid: string
 ) => {

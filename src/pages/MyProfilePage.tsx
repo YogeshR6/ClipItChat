@@ -100,6 +100,7 @@ function MyProfilePage() {
               accept="image/*"
               className="hidden"
               onChange={handleUserProfilePhotoUpload}
+              multiple={false}
             />
           </label>
           <Input
