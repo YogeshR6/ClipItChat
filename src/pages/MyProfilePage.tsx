@@ -3,9 +3,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/contexts/AuthContext";
+import { PostType } from "@/types/post";
 import { UserType } from "@/types/user";
 import { uploadProfilePhotoToCloudinaryAndSaveUrlInFirestore } from "@/utils/cloudinaryFunctions";
+import { getAllPostsDataByUserUid } from "@/utils/postFunctions";
 import { updateUserDetailsInFirestore } from "@/utils/userFunctions";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { VscAccount } from "react-icons/vsc";
@@ -25,6 +28,18 @@ function MyProfilePage() {
   const [updatedUserDetails, setUpdatedUserDetails] = useState<
     Partial<UserType>
   >({});
+  const [userPostList, setUserPostList] = useState<PostType[] | null>(null);
+
+  useEffect(() => {
+    if (user.uid) fetchAllUserPostsData(user.uid);
+  }, [user.uid]);
+
+  const fetchAllUserPostsData = async (userUid: string) => {
+    const postList = await getAllPostsDataByUserUid(userUid);
+    if (!(postList instanceof Error)) {
+      setUserPostList(postList);
+    }
+  };
 
   const handleUserDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -72,6 +87,10 @@ function MyProfilePage() {
         photoUrl: uploadedImageData.secure_url,
       }));
     }
+  };
+
+  const handlePostClick = (postUid: string) => {
+    router.push(`/posts/${postUid}`);
   };
 
   if (isLoggedIn === false) {
@@ -156,6 +175,29 @@ function MyProfilePage() {
             </Button>
           </div>
         )}
+      </div>
+      <div>
+        <p>My Posts</p>
+        <div>
+          {userPostList ? (
+            userPostList.map((post) => (
+              <div
+                key={post.postUid}
+                className="border-2 m-2 p-2 cursor-pointer"
+                onClick={() => handlePostClick(post.postUid)}
+              >
+                <Image
+                  src={post.imageUrl}
+                  alt={`Post image ${post.postUid}`}
+                  width={200}
+                  height={200}
+                />
+              </div>
+            ))
+          ) : (
+            <p>No posts available</p>
+          )}
+        </div>
       </div>
     </div>
   );

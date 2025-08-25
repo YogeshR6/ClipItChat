@@ -6,4 +6,5 @@ export type UserType = {
   lName?: string;
   username?: string;
   posts?: string[];
+  cloudinaryProfilePhotoAssetId?: string;
 };

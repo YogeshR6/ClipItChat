@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/ui/file-upload";
 import { useAuth } from "@/hooks/contexts/AuthContext";
 import { uploadUserPostImageToCloudinaryAndSaveInfoInFirestore } from "@/utils/cloudinaryFunctions";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -46,10 +47,11 @@ const UploadPage: React.FC = () => {
           <div>
             <h3>Uploaded File:</h3>
             <p>{uploadedFile.size}</p>
-            <img
+            <Image
               src={URL.createObjectURL(uploadedFile)}
               alt="Uploaded"
-              className="max-w-full h-[200px]"
+              width={200}
+              height={200}
             />
             <Button type="button" onClick={() => setUploadedFile(null)}>
               Cancel

@@ -56,6 +56,7 @@ export const uploadProfilePhotoToCloudinaryAndSaveUrlInFirestore = async (
     );
     await updateUserDetailsInFirestore(userUid, {
       photoUrl: uploadedImageData.secure_url,
+      cloudinaryProfilePhotoAssetId: uploadedImageData.asset_id,
     });
     return uploadedImageData;
   } catch (error) {
@@ -81,6 +82,7 @@ export const uploadUserPostImageToCloudinaryAndSaveInfoInFirestore = async (
     );
     const newPostId = await createNewPostImage(
       uploadedImageData.secure_url,
+      uploadedImageData.asset_id,
       userUid
     );
     if (!(newPostId instanceof Error)) {
