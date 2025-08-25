@@ -1,6 +1,7 @@
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/contexts/AuthContext";
 import { PostType } from "@/types/post";
-import { getPostDataByUid } from "@/utils/postFunctions";
+import { deletePostById, getPostDataByUid } from "@/utils/postFunctions";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -30,6 +31,11 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
     if (!(postData instanceof Error)) setPostData(postData);
   };
 
+  const handleDeletePost = async (postData: PostType) => {
+    await deletePostById(postData);
+    router.push("/");
+  };
+
   if (isLoggedIn === false) {
     return <></>;
   }
@@ -47,6 +53,13 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
             height={200}
           />
           <p>User ID: {postData.userUid}</p>
+          <Button
+            onClick={() => handleDeletePost(postData)}
+            variant="destructive"
+            type="button"
+          >
+            Delete
+          </Button>
         </div>
       )}
     </div>

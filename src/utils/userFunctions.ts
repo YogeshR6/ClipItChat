@@ -1,5 +1,6 @@
 import {
   addDoc,
+  arrayRemove,
   arrayUnion,
   collection,
   doc,
@@ -67,6 +68,20 @@ export const addNewUserPostInFirestore = async (
     const userRef = doc(db, "users", uid);
     await updateDoc(userRef, {
       posts: arrayUnion(postId),
+    });
+  } catch (error) {
+    return error;
+  }
+};
+
+export const removeUserPostFromFirestore = async (
+  uid: string,
+  postId: string
+) => {
+  try {
+    const userRef = doc(db, "users", uid);
+    await updateDoc(userRef, {
+      posts: arrayRemove(postId),
     });
   } catch (error) {
     return error;

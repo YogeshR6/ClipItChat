@@ -56,7 +56,7 @@ export const uploadProfilePhotoToCloudinaryAndSaveUrlInFirestore = async (
     );
     await updateUserDetailsInFirestore(userUid, {
       photoUrl: uploadedImageData.secure_url,
-      cloudinaryProfilePhotoAssetId: uploadedImageData.asset_id,
+      cloudinaryProfilePhotoPublicId: uploadedImageData.public_id,
     });
     return uploadedImageData;
   } catch (error) {
@@ -82,8 +82,8 @@ export const uploadUserPostImageToCloudinaryAndSaveInfoInFirestore = async (
     );
     const newPostId = await createNewPostImage(
       uploadedImageData.secure_url,
-      uploadedImageData.asset_id,
-      userUid
+      userUid,
+      uploadedImageData.public_id
     );
     if (!(newPostId instanceof Error)) {
       await addNewUserPostInFirestore(userUid, newPostId);
@@ -91,5 +91,34 @@ export const uploadUserPostImageToCloudinaryAndSaveInfoInFirestore = async (
     }
   } catch (error) {
     console.error("Upload failed:", error);
+  }
+};
+
+export const deleteImageStoredInCloudinary = async (publicId: string) => {
+  try {
+    const timestamp = Math.round(new Date().getTime() / 1000);
+    const paramsToSign = { timestamp, public_id: publicId };
+    const signature = await getSignedUploadSignatureFromCloudinary(
+      paramsToSign
+    );
+
+    const formData = new FormData();
+    formData.append("timestamp", timestamp.toString());
+    formData.append("signature", signature);
+    formData.append("api_key", process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY!);
+    formData.append("public_id", publicId);
+
+    const deleteUrl = `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/destroy`;
+
+    const deletedImageResponse = await fetch(deleteUrl, {
+      method: "POST",
+      body: formData,
+    });
+
+    const deletedImageData = await deletedImageResponse.json();
+    return deletedImageData;
+  } catch (error) {
+    console.error("Error deleting image:", error);
+    return false;
   }
 };

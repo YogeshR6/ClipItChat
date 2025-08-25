@@ -1,8 +1,11 @@
 import { PostType } from "@/types/post";
+import { deleteImageStoredInCloudinary } from "@/utils/cloudinaryFunctions";
 import { db } from "@/utils/firebase";
+import { removeUserPostFromFirestore } from "@/utils/userFunctions";
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -14,8 +17,8 @@ import {
 
 export const createNewPostImage = async (
   imageUrl: string,
-  assetId: string,
-  userUid: string
+  userUid: string,
+  publicId: string
 ): Promise<string | Error> => {
   try {
     const timestamp = new Date();
@@ -25,7 +28,7 @@ export const createNewPostImage = async (
       likes: 0,
       comments: [],
       createdAt: timestamp,
-      cloudinaryAssetId: assetId,
+      cloudinaryPublicId: publicId,
     });
     return createNewPostImageResponse.id;
   } catch (error) {
@@ -73,6 +76,19 @@ export const getFirstPagePostsListResultUsingLimit = async (
     return postList.docs.map((doc) => {
       return { ...(doc.data() as PostType), postUid: doc.id };
     });
+  } catch (error) {
+    return error as Error;
+  }
+};
+
+export const deletePostById = async (
+  postData: PostType
+): Promise<boolean | Error> => {
+  try {
+    await deleteDoc(doc(db, "posts", postData.postUid));
+    await deleteImageStoredInCloudinary(postData.cloudinaryPublicId);
+    await removeUserPostFromFirestore(postData.userUid, postData.postUid);
+    return true;
   } catch (error) {
     return error as Error;
   }
