@@ -1,6 +1,5 @@
 import { GameCategoryType } from "@/types/misc";
-import { PostType } from "@/types/post";
-import { UserType } from "@/types/user";
+import { CommentType, PostType } from "@/types/post";
 import { deleteImageStoredInCloudinary } from "@/utils/cloudinaryFunctions";
 import { db } from "@/utils/firebase";
 import {
@@ -10,6 +9,7 @@ import {
 } from "@/utils/userFunctions";
 import {
   addDoc,
+  arrayUnion,
   collection,
   deleteDoc,
   doc,
@@ -19,6 +19,7 @@ import {
   limit,
   orderBy,
   query,
+  Timestamp,
   updateDoc,
   where,
 } from "firebase/firestore";
@@ -123,6 +124,44 @@ export const userUnlikePost = async (postData: PostType, userId: string) => {
       likes: increment(-1),
     });
     await removePostFromUserLikedPosts(userId, postData.postUid);
+  } catch (error) {
+    return error as Error;
+  }
+};
+
+export const addUserCommentOnPost = async (
+  postData: PostType,
+  userId: string,
+  comment: string,
+  commentId: string
+) => {
+  try {
+    const postRef = doc(db, "posts", postData.postUid);
+    await updateDoc(postRef, {
+      comments: arrayUnion({
+        commentId: commentId,
+        userUid: userId,
+        comment: comment,
+        createdAt: Timestamp.now(),
+      }),
+    });
+  } catch (error) {
+    return error as Error;
+  }
+};
+
+export const deleteCommentFromPost = async (
+  postData: PostType,
+  commentToRemove: CommentType
+) => {
+  try {
+    const updatedCommentsList = postData.comments?.filter(
+      (c) => c.commentId !== commentToRemove.commentId
+    );
+    const postRef = doc(db, "posts", postData.postUid);
+    await updateDoc(postRef, {
+      comments: updatedCommentsList,
+    });
   } catch (error) {
     return error as Error;
   }

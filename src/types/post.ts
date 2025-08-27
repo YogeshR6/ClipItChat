@@ -1,4 +1,5 @@
 import { GameCategoryType } from "@/types/misc";
+import { Timestamp } from "firebase/firestore";
 
 export type PostType = {
   createdAt: string;
@@ -8,4 +9,12 @@ export type PostType = {
   cloudinaryPublicId: string;
   selectedGame: GameCategoryType;
   likes: number;
+  comments?: CommentType[];
+};
+
+export type CommentType = {
+  userUid: string;
+  comment: string;
+  createdAt: Timestamp;
+  commentId: string;
 };
