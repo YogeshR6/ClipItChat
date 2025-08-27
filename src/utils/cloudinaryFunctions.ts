@@ -3,6 +3,7 @@ import {
   addNewUserPostInFirestore,
   updateUserDetailsInFirestore,
 } from "./userFunctions";
+import { GameCategoryType } from "@/types/misc";
 
 export const getSignedUploadSignatureFromCloudinary = async (paramsToSign: {
   [key: string]: any;
@@ -66,7 +67,8 @@ export const uploadProfilePhotoToCloudinaryAndSaveUrlInFirestore = async (
 
 export const uploadUserPostImageToCloudinaryAndSaveInfoInFirestore = async (
   file: File,
-  userUid: string
+  userUid: string,
+  selectedGame: GameCategoryType
 ) => {
   try {
     const timestamp = Math.round(new Date().getTime() / 1000);
@@ -83,7 +85,8 @@ export const uploadUserPostImageToCloudinaryAndSaveInfoInFirestore = async (
     const newPostId = await createNewPostImage(
       uploadedImageData.secure_url,
       userUid,
-      uploadedImageData.public_id
+      uploadedImageData.public_id,
+      selectedGame
     );
     if (!(newPostId instanceof Error)) {
       await addNewUserPostInFirestore(userUid, newPostId);

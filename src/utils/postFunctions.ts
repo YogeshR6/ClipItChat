@@ -1,3 +1,4 @@
+import { GameCategoryType } from "@/types/misc";
 import { PostType } from "@/types/post";
 import { deleteImageStoredInCloudinary } from "@/utils/cloudinaryFunctions";
 import { db } from "@/utils/firebase";
@@ -18,7 +19,8 @@ import {
 export const createNewPostImage = async (
   imageUrl: string,
   userUid: string,
-  publicId: string
+  publicId: string,
+  selectedGame: GameCategoryType
 ): Promise<string | Error> => {
   try {
     const timestamp = new Date();
@@ -29,6 +31,7 @@ export const createNewPostImage = async (
       comments: [],
       createdAt: timestamp,
       cloudinaryPublicId: publicId,
+      selectedGame: selectedGame,
     });
     return createNewPostImageResponse.id;
   } catch (error) {

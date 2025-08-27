@@ -53,6 +53,7 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
             height={200}
           />
           <p>User ID: {postData.userUid}</p>
+          <p>Category: {postData.selectedGame.name}</p>
           <Button
             onClick={() => handleDeletePost(postData)}
             variant="destructive"
