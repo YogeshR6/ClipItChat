@@ -7,4 +7,5 @@ export type PostType = {
   postUid: string;
   cloudinaryPublicId: string;
   selectedGame: GameCategoryType;
+  likes: number;
 };

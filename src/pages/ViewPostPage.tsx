@@ -1,7 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/contexts/AuthContext";
 import { PostType } from "@/types/post";
-import { deletePostById, getPostDataByUid } from "@/utils/postFunctions";
+import {
+  deletePostById,
+  getPostDataByUid,
+  userLikePost,
+  userUnlikePost,
+} from "@/utils/postFunctions";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -11,7 +16,7 @@ interface ViewPostPageProps {
 }
 
 const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user, setUser } = useAuth();
   const router = useRouter();
 
   const [postData, setPostData] = useState<PostType | null>(null);
@@ -36,24 +41,75 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
     router.push("/");
   };
 
+  const handleUserLikePost = async () => {
+    if (postData && user) {
+      if (user.likedPosts?.includes(postId)) {
+        await userUnlikePost(postData, user.uid);
+        // Optimistically update the UI
+        setPostData((prevData) => {
+          if (prevData) {
+            return { ...prevData, likes: prevData.likes - 1 };
+          }
+          return prevData;
+        });
+        setUser((prevUser) => {
+          if (prevUser) {
+            return {
+              ...prevUser,
+              likedPosts: prevUser.likedPosts?.filter((id) => id !== postId),
+            };
+          }
+          return prevUser;
+        });
+      } else {
+        await userLikePost(postData, user.uid);
+        // Optimistically update the UI
+        setPostData((prevData) => {
+          if (prevData) {
+            return { ...prevData, likes: prevData.likes + 1 };
+          }
+          return prevData;
+        });
+        setUser((prevUser) => {
+          if (prevUser) {
+            return {
+              ...prevUser,
+              likedPosts: [...(prevUser.likedPosts ?? []), postId],
+            };
+          }
+          return prevUser;
+        });
+      }
+    }
+  };
+
   if (isLoggedIn === false) {
     return <></>;
   }
 
   return (
-    <div>
+    <div className="flex flex-col justify-center items-center gap-5 p-5">
       <h1>View Post Page</h1>
       <p>Post ID: {postId}</p>
       {postData && (
-        <div>
+        <>
           <Image
             src={postData.imageUrl}
             alt="Post Image"
             width={200}
             height={200}
+            className="border border-black"
           />
-          <p>User ID: {postData.userUid}</p>
           <p>Category: {postData.selectedGame.name}</p>
+          <Button
+            variant={
+              user.likedPosts?.includes(postId) ? "destructive" : "outline"
+            }
+            onClick={handleUserLikePost}
+          >
+            {postData.likes} Likes
+          </Button>
+
           <Button
             onClick={() => handleDeletePost(postData)}
             variant="destructive"
@@ -61,7 +117,7 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
           >
             Delete
           </Button>
-        </div>
+        </>
       )}
     </div>
   );

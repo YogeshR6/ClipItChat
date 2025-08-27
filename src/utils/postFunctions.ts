@@ -1,8 +1,13 @@
 import { GameCategoryType } from "@/types/misc";
 import { PostType } from "@/types/post";
+import { UserType } from "@/types/user";
 import { deleteImageStoredInCloudinary } from "@/utils/cloudinaryFunctions";
 import { db } from "@/utils/firebase";
-import { removeUserPostFromFirestore } from "@/utils/userFunctions";
+import {
+  addPostToUserLikedPosts,
+  removePostFromUserLikedPosts,
+  removeUserPostFromFirestore,
+} from "@/utils/userFunctions";
 import {
   addDoc,
   collection,
@@ -10,9 +15,11 @@ import {
   doc,
   getDoc,
   getDocs,
+  increment,
   limit,
   orderBy,
   query,
+  updateDoc,
   where,
 } from "firebase/firestore";
 
@@ -92,6 +99,30 @@ export const deletePostById = async (
     await deleteImageStoredInCloudinary(postData.cloudinaryPublicId);
     await removeUserPostFromFirestore(postData.userUid, postData.postUid);
     return true;
+  } catch (error) {
+    return error as Error;
+  }
+};
+
+export const userLikePost = async (postData: PostType, userId: string) => {
+  try {
+    const postRef = doc(db, "posts", postData.postUid);
+    await updateDoc(postRef, {
+      likes: increment(1),
+    });
+    await addPostToUserLikedPosts(userId, postData.postUid);
+  } catch (error) {
+    return error as Error;
+  }
+};
+
+export const userUnlikePost = async (postData: PostType, userId: string) => {
+  try {
+    const postRef = doc(db, "posts", postData.postUid);
+    await updateDoc(postRef, {
+      likes: increment(-1),
+    });
+    await removePostFromUserLikedPosts(userId, postData.postUid);
   } catch (error) {
     return error as Error;
   }

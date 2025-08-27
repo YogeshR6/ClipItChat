@@ -52,6 +52,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           fName: userDetails.fName,
           lName: userDetails.lName,
           username: userDetails.username,
+          cloudinaryProfilePhotoPublicId:
+            userDetails.cloudinaryProfilePhotoPublicId,
+          likedPosts: userDetails.likedPosts,
         });
         setIsLoggedIn(true);
       } else {

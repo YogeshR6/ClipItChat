@@ -87,3 +87,28 @@ export const removeUserPostFromFirestore = async (
     return error;
   }
 };
+
+export const addPostToUserLikedPosts = async (uid: string, postId: string) => {
+  try {
+    const userRef = doc(db, "users", uid);
+    await updateDoc(userRef, {
+      likedPosts: arrayUnion(postId),
+    });
+  } catch (error) {
+    return error;
+  }
+};
+
+export const removePostFromUserLikedPosts = async (
+  uid: string,
+  postId: string
+) => {
+  try {
+    const userRef = doc(db, "users", uid);
+    await updateDoc(userRef, {
+      likedPosts: arrayRemove(postId),
+    });
+  } catch (error) {
+    return error;
+  }
+};
