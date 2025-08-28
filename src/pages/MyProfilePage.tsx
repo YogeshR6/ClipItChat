@@ -6,7 +6,10 @@ import { useAuth } from "@/hooks/contexts/AuthContext";
 import { PostType } from "@/types/post";
 import { UserType } from "@/types/user";
 import { uploadProfilePhotoToCloudinaryAndSaveUrlInFirestore } from "@/utils/cloudinaryFunctions";
-import { getAllPostsDataByUserUid } from "@/utils/postFunctions";
+import {
+  getAllLikedPostsDataByUserUid,
+  getAllPostsDataByUserUid,
+} from "@/utils/postFunctions";
 import { updateUserDetailsInFirestore } from "@/utils/userFunctions";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -17,27 +20,41 @@ function MyProfilePage() {
   const { user, setUser, isLoggedIn } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    if (isLoggedIn === false) {
-      router.replace("/auth");
-    }
-  }, [isLoggedIn, router]);
-
   const [isUserEditingDetails, setIsUserEditingDetails] =
     useState<boolean>(false);
   const [updatedUserDetails, setUpdatedUserDetails] = useState<
     Partial<UserType>
   >({});
   const [userPostList, setUserPostList] = useState<PostType[] | null>(null);
+  const [userLikedPostList, setUserLikedPostList] = useState<PostType[] | null>(
+    null
+  );
 
   useEffect(() => {
-    if (user.uid) fetchAllUserPostsData(user.uid);
+    if (isLoggedIn === false) {
+      router.replace("/auth");
+    }
+  }, [isLoggedIn, router]);
+
+  useEffect(() => {
+    if (user.uid) {
+      fetchAllUserPostsData(user.uid);
+      fetchAllUserLikedPostsData(user.uid);
+    }
   }, [user.uid]);
 
   const fetchAllUserPostsData = async (userUid: string) => {
     const postList = await getAllPostsDataByUserUid(userUid);
     if (!(postList instanceof Error)) {
       setUserPostList(postList);
+    }
+  };
+
+  const fetchAllUserLikedPostsData = async (userUid: string) => {
+    const likedPostList = await getAllLikedPostsDataByUserUid(userUid);
+
+    if (!(likedPostList instanceof Error)) {
+      setUserLikedPostList(likedPostList);
     }
   };
 
@@ -176,9 +193,9 @@ function MyProfilePage() {
           </div>
         )}
       </div>
-      <div>
-        <p>My Posts</p>
-        <div>
+      <div className="flex flex-row items-center justify-center gap-5 border-2 border-black rounded-xl">
+        <div className="flex flex-col items-center justify-center">
+          <p>My Posts</p>
           {userPostList ? (
             userPostList.map((post) => (
               <div
@@ -196,6 +213,27 @@ function MyProfilePage() {
             ))
           ) : (
             <p>No posts available</p>
+          )}
+        </div>
+        <div className="flex flex-col items-center justify-center">
+          <p>My Liked Posts</p>
+          {userLikedPostList ? (
+            userLikedPostList.map((post) => (
+              <div
+                key={post.postUid}
+                className="border-2 m-2 p-2 cursor-pointer"
+                onClick={() => handlePostClick(post.postUid)}
+              >
+                <Image
+                  src={post.imageUrl}
+                  alt={`Post image ${post.postUid}`}
+                  width={200}
+                  height={200}
+                />
+              </div>
+            ))
+          ) : (
+            <p>No liked posts available</p>
           )}
         </div>
       </div>

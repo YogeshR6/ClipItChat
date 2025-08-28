@@ -13,6 +13,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  documentId,
   getDoc,
   getDocs,
   increment,
@@ -161,6 +162,30 @@ export const deleteCommentFromPost = async (
     const postRef = doc(db, "posts", postData.postUid);
     await updateDoc(postRef, {
       comments: updatedCommentsList,
+    });
+  } catch (error) {
+    return error as Error;
+  }
+};
+
+export const getAllLikedPostsDataByUserUid = async (userUid: string) => {
+  try {
+    const getUserData = await getDoc(doc(db, "users", userUid));
+    if (!getUserData.exists()) {
+      throw new Error("User not found");
+    }
+    const userLikedPostIds = getUserData.data().likedPosts || [];
+    if (userLikedPostIds.length === 0) {
+      return [];
+    }
+
+    const q = query(
+      collection(db, "posts"),
+      where(documentId(), "in", userLikedPostIds)
+    );
+    const likedPostList = await getDocs(q);
+    return likedPostList.docs.map((doc) => {
+      return { ...(doc.data() as PostType), postUid: doc.id };
     });
   } catch (error) {
     return error as Error;
