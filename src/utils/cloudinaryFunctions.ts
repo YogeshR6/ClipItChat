@@ -5,56 +5,24 @@ import {
 } from "./userFunctions";
 import { GameCategoryType } from "@/types/misc";
 
-export const getSignedUploadSignatureFromCloudinary = async (paramsToSign: {
-  [key: string]: any;
-}) => {
-  const signatureResponse = await fetch("/api/sign-upload", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ paramsToSign }),
-  });
-  const { signature } = await signatureResponse.json();
-  return signature;
-};
-
-export const uploadImageToCloudinary = async (
-  file: File,
-  timestamp: string,
-  signature: string
-) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("timestamp", timestamp);
-  formData.append("signature", signature);
-  formData.append("api_key", process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY!);
-
-  const uploadUrl = `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`;
-
-  const uploadResponse = await fetch(uploadUrl, {
-    method: "POST",
-    body: formData,
-  });
-
-  const uploadedImageData = await uploadResponse.json();
-  return uploadedImageData;
-};
-
 export const uploadProfilePhotoToCloudinaryAndSaveUrlInFirestore = async (
   file: File,
   userUid: string
 ) => {
   try {
-    const timestamp = Math.round(new Date().getTime() / 1000);
-    const paramsToSign = { timestamp };
-    const signature = await getSignedUploadSignatureFromCloudinary(
-      paramsToSign
-    );
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("uploadFolder", "profile_photos");
+    const response = await fetch("/api/upload-image", {
+      method: "POST",
+      body: formData,
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Something went wrong");
+    }
 
-    const uploadedImageData = await uploadImageToCloudinary(
-      file,
-      timestamp.toString(),
-      signature
-    );
+    const uploadedImageData = await response.json();
     await updateUserDetailsInFirestore(userUid, {
       photoUrl: uploadedImageData.secure_url,
       cloudinaryProfilePhotoPublicId: uploadedImageData.public_id,
@@ -71,17 +39,22 @@ export const uploadUserPostImageToCloudinaryAndSaveInfoInFirestore = async (
   selectedGame: GameCategoryType
 ) => {
   try {
-    const timestamp = Math.round(new Date().getTime() / 1000);
-    const paramsToSign = { timestamp };
-    const signature = await getSignedUploadSignatureFromCloudinary(
-      paramsToSign
-    );
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("uploadFolder", "user_posts");
 
-    const uploadedImageData = await uploadImageToCloudinary(
-      file,
-      timestamp.toString(),
-      signature
-    );
+    const response = await fetch("/api/upload-image", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Something went wrong");
+    }
+
+    const uploadedImageData = await response.json();
+
     const newPostId = await createNewPostImage(
       uploadedImageData.secure_url,
       userUid,
@@ -99,26 +72,20 @@ export const uploadUserPostImageToCloudinaryAndSaveInfoInFirestore = async (
 
 export const deleteImageStoredInCloudinary = async (publicId: string) => {
   try {
-    const timestamp = Math.round(new Date().getTime() / 1000);
-    const paramsToSign = { timestamp, public_id: publicId };
-    const signature = await getSignedUploadSignatureFromCloudinary(
-      paramsToSign
-    );
-
-    const formData = new FormData();
-    formData.append("timestamp", timestamp.toString());
-    formData.append("signature", signature);
-    formData.append("api_key", process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY!);
-    formData.append("public_id", publicId);
-
-    const deleteUrl = `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/destroy`;
-
-    const deletedImageResponse = await fetch(deleteUrl, {
+    const response = await fetch("/api/delete-image", {
       method: "POST",
-      body: formData,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ public_id: publicId }),
     });
 
-    const deletedImageData = await deletedImageResponse.json();
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to delete image");
+    }
+
+    const deletedImageData = await response.json();
     return deletedImageData;
   } catch (error) {
     console.error("Error deleting image:", error);
