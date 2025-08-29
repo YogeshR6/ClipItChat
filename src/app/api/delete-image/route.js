@@ -39,14 +39,24 @@ export async function POST(request) {
   if (!decodedToken) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  // Parse the request body to get the public_id
   const body = await request.json();
-  const { public_id } = body;
+
+  // Parse the request body to get the public_id
+  const { public_id, folderName } = body;
+
+  const uid = decodedToken.uid;
 
   if (!public_id) {
     return NextResponse.json(
       { error: "Public ID not provided." },
       { status: 400 }
+    );
+  }
+
+  if (`${folderName}/${uid}/${public_id.split("/").pop()}` !== public_id) {
+    return NextResponse.json(
+      { error: "Unauthorized to delete this image." },
+      { status: 403 }
     );
   }
 

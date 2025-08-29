@@ -97,9 +97,28 @@ export const deletePostById = async (
   postData: PostType
 ): Promise<boolean | Error> => {
   try {
+    const deleteImageFromCloudinaryResponse =
+      await deleteImageStoredInCloudinary(
+        postData.cloudinaryPublicId,
+        "user_posts"
+      );
+    if (deleteImageFromCloudinaryResponse instanceof Error) {
+      console.error(
+        "Error deleting image from Cloudinary:",
+        deleteImageFromCloudinaryResponse
+      );
+      throw new Error("Failed to delete image from Cloudinary");
+    }
+    const removeUserPostFromFirestoreResponse =
+      await removeUserPostFromFirestore(postData.userUid, postData.postUid);
+    if (removeUserPostFromFirestoreResponse instanceof Error) {
+      console.error(
+        "Error removing user post from Firestore:",
+        removeUserPostFromFirestoreResponse
+      );
+      throw new Error("Failed to remove user post from Firestore");
+    }
     await deleteDoc(doc(db, "posts", postData.postUid));
-    await deleteImageStoredInCloudinary(postData.cloudinaryPublicId);
-    await removeUserPostFromFirestore(postData.userUid, postData.postUid);
     return true;
   } catch (error) {
     return error as Error;

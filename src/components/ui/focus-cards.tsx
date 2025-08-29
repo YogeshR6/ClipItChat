@@ -67,7 +67,7 @@ export function FocusCards({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mx-auto md:px-8 w-full">
       {cards.map((card, index) => (
         <Card
-          key={card.userUid}
+          key={card.postUid}
           card={card}
           index={index}
           hovered={hovered}

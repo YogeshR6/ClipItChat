@@ -95,10 +95,7 @@ function MyProfilePage() {
     const file = e.target.files?.[0];
     if (file) {
       const uploadedImageData =
-        await uploadProfilePhotoToCloudinaryAndSaveUrlInFirestore(
-          file,
-          user.uid
-        );
+        await uploadProfilePhotoToCloudinaryAndSaveUrlInFirestore(file, user);
       setUser((prevUser) => ({
         ...prevUser,
         photoUrl: uploadedImageData.secure_url,

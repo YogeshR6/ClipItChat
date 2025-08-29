@@ -5,10 +5,11 @@ import {
 } from "./userFunctions";
 import { GameCategoryType } from "@/types/misc";
 import { auth } from "@/utils/firebase";
+import { UserType } from "@/types/user";
 
 export const uploadProfilePhotoToCloudinaryAndSaveUrlInFirestore = async (
   file: File,
-  userUid: string
+  userObj: UserType
 ) => {
   const user = auth.currentUser;
   if (!user) throw new Error("User not authenticated");
@@ -16,6 +17,13 @@ export const uploadProfilePhotoToCloudinaryAndSaveUrlInFirestore = async (
     const formData = new FormData();
     formData.append("file", file);
     formData.append("uploadFolder", "profile_photos");
+
+    if (userObj.cloudinaryProfilePhotoPublicId && userObj.photoUrl) {
+      deleteImageStoredInCloudinary(
+        userObj.cloudinaryProfilePhotoPublicId,
+        "profile_photos"
+      );
+    }
 
     const token = await user.getIdToken();
     const response = await fetch("/api/upload-image", {
@@ -31,7 +39,7 @@ export const uploadProfilePhotoToCloudinaryAndSaveUrlInFirestore = async (
     }
 
     const uploadedImageData = await response.json();
-    await updateUserDetailsInFirestore(userUid, {
+    await updateUserDetailsInFirestore(userObj.uid, {
       photoUrl: uploadedImageData.secure_url,
       cloudinaryProfilePhotoPublicId: uploadedImageData.public_id,
     });
@@ -84,7 +92,10 @@ export const uploadUserPostImageToCloudinaryAndSaveInfoInFirestore = async (
   }
 };
 
-export const deleteImageStoredInCloudinary = async (publicId: string) => {
+export const deleteImageStoredInCloudinary = async (
+  publicId: string,
+  type: "profile_photos" | "user_posts"
+) => {
   const user = auth.currentUser;
   if (!user) throw new Error("User not authenticated");
   try {
@@ -94,7 +105,7 @@ export const deleteImageStoredInCloudinary = async (publicId: string) => {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ public_id: publicId }),
+      body: JSON.stringify({ public_id: publicId, folderName: type }),
     });
 
     if (!response.ok) {
