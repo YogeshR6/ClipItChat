@@ -56,9 +56,11 @@ const UploadPage: React.FC = () => {
     if (gameSearchInput.length > 2) {
       setGameSearchLoading(true);
       const categories = await getGameCategoriesList(gameSearchInput);
-      setGameCategoryList(categories);
-      setGameSearchLoading(false);
-      gameSearchRef.current?.focus();
+      if (!(categories instanceof Error)) {
+        setGameCategoryList(categories);
+        setGameSearchLoading(false);
+        gameSearchRef.current?.focus();
+      }
     } else {
       setGameCategoryList(selectedGame ? [selectedGame] : []);
       setGameSearchLoading(false);

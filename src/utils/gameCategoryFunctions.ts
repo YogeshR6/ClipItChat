@@ -1,4 +1,5 @@
 import { GameCategoryType } from "@/types/misc";
+import { auth } from "@/utils/firebase";
 
 export const getRelevanceScore = (game: GameCategoryType, query: string) => {
   const name = game.name.toLowerCase();
@@ -39,20 +40,28 @@ export const getRelevanceScore = (game: GameCategoryType, query: string) => {
 
 export const getGameCategoriesList = async (
   searchInput: string
-): Promise<GameCategoryType[]> => {
-  const getGameListResponse = await fetch("/api/get-game-list", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ filterInput: searchInput }),
-  });
-  const filteredGameList = await getGameListResponse.json();
-  return filteredGameList.data.sort(
-    (a: GameCategoryType, b: GameCategoryType) => {
-      const scoreA = getRelevanceScore(a, searchInput);
-      const scoreB = getRelevanceScore(b, searchInput);
-      return scoreB - scoreA;
-    }
-  );
+): Promise<GameCategoryType[] | Error> => {
+  const user = auth.currentUser;
+  if (!user) throw new Error("User not authenticated");
+  try {
+    const token = await user.getIdToken();
+    const getGameListResponse = await fetch("/api/get-game-list", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ filterInput: searchInput }),
+    });
+    const filteredGameList = await getGameListResponse.json();
+    return filteredGameList.data.sort(
+      (a: GameCategoryType, b: GameCategoryType) => {
+        const scoreA = getRelevanceScore(a, searchInput);
+        const scoreB = getRelevanceScore(b, searchInput);
+        return scoreB - scoreA;
+      }
+    );
+  } catch (error) {
+    console.error("Error fetching game categories:", error);
+    return error as Error;
+  }
 };

@@ -4,18 +4,26 @@ import {
   updateUserDetailsInFirestore,
 } from "./userFunctions";
 import { GameCategoryType } from "@/types/misc";
+import { auth } from "@/utils/firebase";
 
 export const uploadProfilePhotoToCloudinaryAndSaveUrlInFirestore = async (
   file: File,
   userUid: string
 ) => {
+  const user = auth.currentUser;
+  if (!user) throw new Error("User not authenticated");
   try {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("uploadFolder", "profile_photos");
+
+    const token = await user.getIdToken();
     const response = await fetch("/api/upload-image", {
       method: "POST",
       body: formData,
+      headers: {
+        Authorization: `Bearer ${token}`, // Send token in the header
+      },
     });
     if (!response.ok) {
       const errorData = await response.json();
@@ -38,14 +46,20 @@ export const uploadUserPostImageToCloudinaryAndSaveInfoInFirestore = async (
   userUid: string,
   selectedGame: GameCategoryType
 ) => {
+  const user = auth.currentUser;
+  if (!user) throw new Error("User not authenticated");
   try {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("uploadFolder", "user_posts");
 
+    const token = await user.getIdToken();
     const response = await fetch("/api/upload-image", {
       method: "POST",
       body: formData,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     if (!response.ok) {
@@ -71,11 +85,14 @@ export const uploadUserPostImageToCloudinaryAndSaveInfoInFirestore = async (
 };
 
 export const deleteImageStoredInCloudinary = async (publicId: string) => {
+  const user = auth.currentUser;
+  if (!user) throw new Error("User not authenticated");
   try {
+    const token = await user.getIdToken();
     const response = await fetch("/api/delete-image", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ public_id: publicId }),
     });
