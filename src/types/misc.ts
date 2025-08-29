@@ -11,4 +11,5 @@ export type GameCategoryType = {
 export type UploadPageErrorType = {
   missingFile: boolean;
   missingGame: boolean;
+  storageLimit?: boolean;
 } | null;

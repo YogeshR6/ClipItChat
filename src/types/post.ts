@@ -10,6 +10,7 @@ export type PostType = {
   selectedGame: GameCategoryType;
   likes: number;
   comments?: CommentType[];
+  postSize: number;
 };
 
 export type CommentType = {

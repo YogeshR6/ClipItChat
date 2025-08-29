@@ -8,4 +8,6 @@ export type UserType = {
   posts?: string[];
   cloudinaryProfilePhotoPublicId?: string;
   likedPosts?: string[];
+  cloudinaryProfilePhotoSize?: number;
+  imageStorageUsed?: number;
 };

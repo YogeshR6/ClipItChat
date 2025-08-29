@@ -75,7 +75,11 @@ export async function POST(request) {
     });
 
     // Return the successful upload data
-    return NextResponse.json(uploadResult);
+    return NextResponse.json({
+      secure_url: uploadResult.secure_url,
+      public_id: uploadResult.public_id,
+      size: (uploadResult.bytes / 1048576).toFixed(3), // size in MB
+    });
   } catch (error) {
     console.error("Server error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

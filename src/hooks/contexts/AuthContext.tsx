@@ -46,15 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           user.uid
         )) as UserType;
         setUser({
-          email: userDetails.email,
-          uid: userDetails.uid,
-          photoUrl: userDetails.photoUrl,
-          fName: userDetails.fName,
-          lName: userDetails.lName,
-          username: userDetails.username,
-          cloudinaryProfilePhotoPublicId:
-            userDetails.cloudinaryProfilePhotoPublicId,
-          likedPosts: userDetails.likedPosts,
+          ...userDetails,
         });
         setIsLoggedIn(true);
       } else {

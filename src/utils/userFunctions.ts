@@ -5,6 +5,7 @@ import {
   collection,
   doc,
   getDocs,
+  increment,
   query,
   updateDoc,
   where,
@@ -50,11 +51,21 @@ export const getUserDetailsFromAuthUid = async (authUid: string) => {
 
 export const updateUserDetailsInFirestore = async (
   uid: string,
-  userDetails: Partial<UserType>
+  userDetails: Partial<UserType>,
+  oldProfileSize?: number
 ) => {
   try {
     const userRef = doc(db, "users", uid);
-    await updateDoc(userRef, userDetails);
+    const imageStorageIncrement =
+      oldProfileSize && userDetails.cloudinaryProfilePhotoSize
+        ? userDetails.cloudinaryProfilePhotoSize - oldProfileSize
+        : userDetails.cloudinaryProfilePhotoSize
+        ? userDetails.cloudinaryProfilePhotoSize
+        : 0;
+    await updateDoc(userRef, {
+      ...userDetails,
+      imageStorageUsed: increment(imageStorageIncrement),
+    });
   } catch (error) {
     return error;
   }
@@ -62,12 +73,14 @@ export const updateUserDetailsInFirestore = async (
 
 export const addNewUserPostInFirestore = async (
   uid: string,
-  postId: string
-) => {
+  postId: string,
+  newPostSize: number
+): Promise<void | any> => {
   try {
     const userRef = doc(db, "users", uid);
     await updateDoc(userRef, {
       posts: arrayUnion(postId),
+      imageStorageUsed: increment(newPostSize),
     });
   } catch (error) {
     return error;
@@ -76,12 +89,14 @@ export const addNewUserPostInFirestore = async (
 
 export const removeUserPostFromFirestore = async (
   uid: string,
-  postId: string
+  postId: string,
+  postSize: number
 ) => {
   try {
     const userRef = doc(db, "users", uid);
     await updateDoc(userRef, {
       posts: arrayRemove(postId),
+      imageStorageUsed: increment(-postSize),
     });
   } catch (error) {
     return error;

@@ -79,6 +79,13 @@ const UploadPage: React.FC = () => {
         missingGame: !selectedGame,
       });
     }
+    if ((user.imageStorageUsed || 0) + uploadedFile.size / 1048576 > 100) {
+      return setError({
+        missingFile: !uploadedFile,
+        missingGame: !selectedGame,
+        storageLimit: true,
+      });
+    }
     if (user) {
       const newPostId =
         await uploadUserPostImageToCloudinaryAndSaveInfoInFirestore(
@@ -92,6 +99,10 @@ const UploadPage: React.FC = () => {
 
   if (isLoggedIn === false) {
     return <></>;
+  }
+
+  if (user.imageStorageUsed && user.imageStorageUsed >= 100) {
+    return <p>You have reached your image storage limit.</p>;
   }
 
   return (
@@ -173,6 +184,11 @@ const UploadPage: React.FC = () => {
       </div>
       {error && (
         <p className="text-red-500">Please upload a file and select a game.</p>
+      )}
+      {error?.storageLimit && (
+        <p className="text-red-500">
+          You have reached your image storage limit.
+        </p>
       )}
       <div className="flex flex-row gap-5">
         <Button type="button" onClick={() => setUploadedFile(null)}>

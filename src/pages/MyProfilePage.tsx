@@ -99,6 +99,8 @@ function MyProfilePage() {
       setUser((prevUser) => ({
         ...prevUser,
         photoUrl: uploadedImageData.secure_url,
+        cloudinaryProfilePhotoPublicId: uploadedImageData.public_id,
+        cloudinaryProfilePhotoSize: Number(uploadedImageData.size),
       }));
     }
   };

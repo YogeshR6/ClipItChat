@@ -29,7 +29,8 @@ export const createNewPostImage = async (
   imageUrl: string,
   userUid: string,
   publicId: string,
-  selectedGame: GameCategoryType
+  selectedGame: GameCategoryType,
+  size: number
 ): Promise<string | Error> => {
   try {
     const timestamp = new Date();
@@ -41,6 +42,7 @@ export const createNewPostImage = async (
       createdAt: timestamp,
       cloudinaryPublicId: publicId,
       selectedGame: selectedGame,
+      postSize: Number(size),
     });
     return createNewPostImageResponse.id;
   } catch (error) {
@@ -110,7 +112,11 @@ export const deletePostById = async (
       throw new Error("Failed to delete image from Cloudinary");
     }
     const removeUserPostFromFirestoreResponse =
-      await removeUserPostFromFirestore(postData.userUid, postData.postUid);
+      await removeUserPostFromFirestore(
+        postData.userUid,
+        postData.postUid,
+        postData.postSize || 0
+      );
     if (removeUserPostFromFirestoreResponse instanceof Error) {
       console.error(
         "Error removing user post from Firestore:",

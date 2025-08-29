@@ -17,7 +17,6 @@ export const uploadProfilePhotoToCloudinaryAndSaveUrlInFirestore = async (
     const formData = new FormData();
     formData.append("file", file);
     formData.append("uploadFolder", "profile_photos");
-
     if (userObj.cloudinaryProfilePhotoPublicId && userObj.photoUrl) {
       deleteImageStoredInCloudinary(
         userObj.cloudinaryProfilePhotoPublicId,
@@ -39,10 +38,15 @@ export const uploadProfilePhotoToCloudinaryAndSaveUrlInFirestore = async (
     }
 
     const uploadedImageData = await response.json();
-    await updateUserDetailsInFirestore(userObj.uid, {
-      photoUrl: uploadedImageData.secure_url,
-      cloudinaryProfilePhotoPublicId: uploadedImageData.public_id,
-    });
+    await updateUserDetailsInFirestore(
+      userObj.uid,
+      {
+        photoUrl: uploadedImageData.secure_url,
+        cloudinaryProfilePhotoPublicId: uploadedImageData.public_id,
+        cloudinaryProfilePhotoSize: Number(uploadedImageData.size),
+      },
+      userObj.cloudinaryProfilePhotoSize || undefined
+    );
     return uploadedImageData;
   } catch (error) {
     console.error("Upload failed:", error);
@@ -81,10 +85,15 @@ export const uploadUserPostImageToCloudinaryAndSaveInfoInFirestore = async (
       uploadedImageData.secure_url,
       userUid,
       uploadedImageData.public_id,
-      selectedGame
+      selectedGame,
+      uploadedImageData.size
     );
     if (!(newPostId instanceof Error)) {
-      await addNewUserPostInFirestore(userUid, newPostId);
+      await addNewUserPostInFirestore(
+        userUid,
+        newPostId,
+        uploadedImageData.size
+      );
       return newPostId;
     }
   } catch (error) {
