@@ -18,7 +18,7 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <TopBar />
-          <div className="mt-16">{children}</div>
+          {children}
         </AuthProvider>
       </body>
     </html>

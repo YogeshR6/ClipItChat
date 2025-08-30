@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const TopBar: React.FC = () => {
   const { user, isLoggedIn } = useAuth();
@@ -34,14 +35,20 @@ const TopBar: React.FC = () => {
   };
 
   return (
-    <div className="fixed top-0 flex flex-row justify-between w-full items-center p-3">
-      <div>Logo Here</div>
+    <div className="flex flex-row justify-between w-full items-center py-3 px-5">
+      <Image
+        src="/logos/horizontal_png_logo.png"
+        alt="Logo"
+        width={130}
+        height={50}
+        onClick={() => router.push("/")}
+      />
       <div className="flex flex-row gap-5">
         <Link href="/" className="p-2 rounded-md">
           Home
         </Link>
         <Link href="/posts" className="p-2 rounded-md">
-          Posts
+          Discover
         </Link>
         <Link href="/upload" className="p-2 rounded-md">
           Upload
