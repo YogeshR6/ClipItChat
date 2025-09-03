@@ -90,7 +90,10 @@ const UploadPage: React.FC = () => {
       const newPostId =
         await uploadUserPostImageToCloudinaryAndSaveInfoInFirestore(
           uploadedFile,
-          user.uid,
+          {
+            id: user.uid,
+            username: user.username,
+          },
           selectedGame
         );
       router.push(`/posts/${newPostId}`);

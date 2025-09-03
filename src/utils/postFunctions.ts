@@ -23,11 +23,15 @@ import {
   Timestamp,
   updateDoc,
   where,
+  writeBatch,
 } from "firebase/firestore";
 
 export const createNewPostImage = async (
   imageUrl: string,
-  userUid: string,
+  user: {
+    id: string;
+    username?: string;
+  },
   publicId: string,
   selectedGame: GameCategoryType,
   size: number
@@ -36,7 +40,7 @@ export const createNewPostImage = async (
     const timestamp = new Date();
     const createNewPostImageResponse = await addDoc(collection(db, "posts"), {
       imageUrl: imageUrl,
-      userUid: userUid,
+      user,
       likes: 0,
       comments: [],
       createdAt: timestamp,
@@ -67,7 +71,7 @@ export const getPostDataByUid = async (
 
 export const getAllPostsDataByUserUid = async (userUid: string) => {
   try {
-    const q = query(collection(db, "posts"), where("userUid", "==", userUid));
+    const q = query(collection(db, "posts"), where("user.id", "==", userUid));
     const postList = await getDocs(q);
     return postList.docs.map((doc) => {
       return { ...(doc.data() as PostType), postUid: doc.id };
@@ -113,7 +117,7 @@ export const deletePostById = async (
     }
     const removeUserPostFromFirestoreResponse =
       await removeUserPostFromFirestore(
-        postData.userUid,
+        postData.user.id,
         postData.postUid,
         postData.postSize || 0
       );
@@ -212,6 +216,25 @@ export const getAllLikedPostsDataByUserUid = async (userUid: string) => {
     return likedPostList.docs.map((doc) => {
       return { ...(doc.data() as PostType), postUid: doc.id };
     });
+  } catch (error) {
+    return error as Error;
+  }
+};
+
+export const updatePostUsernames = async (
+  userId: string,
+  newUsername: string
+) => {
+  try {
+    const q = query(collection(db, "posts"), where("user.id", "==", userId));
+    const postList = await getDocs(q);
+    const batch = writeBatch(db);
+    postList.docs.forEach((doc) => {
+      batch.update(doc.ref, {
+        "user.username": newUsername,
+      });
+    });
+    await batch.commit();
   } catch (error) {
     return error as Error;
   }

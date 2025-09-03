@@ -55,7 +55,10 @@ export const uploadProfilePhotoToCloudinaryAndSaveUrlInFirestore = async (
 
 export const uploadUserPostImageToCloudinaryAndSaveInfoInFirestore = async (
   file: File,
-  userUid: string,
+  userObj: {
+    id: string;
+    username?: string;
+  },
   selectedGame: GameCategoryType
 ) => {
   const user = auth.currentUser;
@@ -83,14 +86,14 @@ export const uploadUserPostImageToCloudinaryAndSaveInfoInFirestore = async (
 
     const newPostId = await createNewPostImage(
       uploadedImageData.secure_url,
-      userUid,
+      userObj,
       uploadedImageData.public_id,
       selectedGame,
       uploadedImageData.size
     );
     if (!(newPostId instanceof Error)) {
       await addNewUserPostInFirestore(
-        userUid,
+        userObj.id,
         newPostId,
         uploadedImageData.size
       );

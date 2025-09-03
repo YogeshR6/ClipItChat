@@ -3,7 +3,10 @@ import { Timestamp } from "firebase/firestore";
 
 export type PostType = {
   createdAt: string;
-  userUid: string;
+  user: {
+    id: string;
+    username?: string;
+  };
   imageUrl: string;
   postUid: string;
   cloudinaryPublicId: string;

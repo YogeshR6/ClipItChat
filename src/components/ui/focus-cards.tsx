@@ -29,7 +29,7 @@ export const Card = React.memo(
     >
       <Image
         src={card.imageUrl}
-        alt={card.userUid}
+        alt={card.user.id}
         fill
         className="object-cover absolute inset-0"
       />
@@ -40,7 +40,7 @@ export const Card = React.memo(
         )}
       >
         <div className="text-xl md:text-2xl font-medium bg-clip-text text-transparent bg-gradient-to-b from-neutral-50 to-neutral-200">
-          {card.userUid}
+          {card.user.username}
         </div>
       </div>
     </div>

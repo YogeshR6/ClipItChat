@@ -13,7 +13,7 @@ cloudinary.config({
 });
 
 export async function POST(request) {
-  const headersList = headers();
+  const headersList = await headers();
   const authHeader = headersList.get("authorization");
 
   // Check for the Authorization header

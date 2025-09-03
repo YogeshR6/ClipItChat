@@ -3,7 +3,7 @@ import { admin } from "../../../lib/firebaseAdmin";
 import { headers } from "next/headers";
 
 export async function POST(request) {
-  const headersList = headers();
+  const headersList = await headers();
   const authHeader = headersList.get("authorization");
 
   // Check for the Authorization header

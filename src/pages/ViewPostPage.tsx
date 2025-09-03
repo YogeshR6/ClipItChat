@@ -164,7 +164,7 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
                 {postData.likes} Likes
               </Button>
 
-              {user.uid === postData.userUid && (
+              {user.uid === postData.user.id && (
                 <Button
                   onClick={() => handleDeletePost(postData)}
                   variant="destructive"
