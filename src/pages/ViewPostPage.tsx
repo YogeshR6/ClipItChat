@@ -92,31 +92,38 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
 
   const handleAddComment = async () => {
     if (newComment.trim() === "" || !postData || !user) return;
-    const commentId = Timestamp.now().toString();
-    await addUserCommentOnPost(
+
+    const addUserCommentResponse = await addUserCommentOnPost(
       postData,
-      user.uid,
-      newComment.trim(),
-      commentId
+      {
+        id: user.uid,
+        username: user.username || "",
+      },
+      newComment.trim()
     );
-    setNewComment("");
-    setPostData((prevData) => {
-      if (prevData) {
-        return {
-          ...prevData,
-          comments: [
-            ...(prevData.comments || []),
-            {
-              userUid: user.uid,
-              comment: newComment.trim(),
-              createdAt: Timestamp.now(),
-              commentId: commentId,
-            },
-          ],
-        };
-      }
-      return prevData;
-    });
+    if (!(addUserCommentResponse instanceof Error)) {
+      setNewComment("");
+      setPostData((prevData) => {
+        if (prevData) {
+          return {
+            ...prevData,
+            comments: [
+              ...(prevData.comments || []),
+              {
+                user: {
+                  id: user.uid,
+                  username: user.username || "",
+                },
+                comment: newComment.trim(),
+                createdAt: Timestamp.now(),
+                commentUid: addUserCommentResponse,
+              },
+            ],
+          };
+        }
+        return prevData;
+      });
+    }
   };
 
   const handleDeleteComment = async (commentToRemove: CommentType) => {
@@ -127,7 +134,7 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
         return {
           ...prevData,
           comments: prevData.comments?.filter(
-            (c) => c.commentId !== commentToRemove.commentId
+            (c) => c.commentUid !== commentToRemove.commentUid
           ),
         };
       }
@@ -192,11 +199,11 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
         <div className="flex flex-col items-start justify-start gap-3">
           {postData?.comments?.map((comment) => (
             <div
-              key={comment.commentId}
+              key={comment.commentUid}
               className="border-b border-gray-300 py-2 flex flex-row justify-center items-start"
             >
               <div>
-                <p className="font-semibold">{comment.userUid}</p>
+                <p className="font-semibold">{comment.user.username || ""}</p>
                 <p>{comment.comment}</p>
                 <p>
                   {comment.createdAt.toDate().toLocaleString("us-IN", {
@@ -208,7 +215,7 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
                   })}
                 </p>
               </div>
-              {user.uid === comment.userUid && (
+              {user.uid === comment.user.id && (
                 <Button
                   variant="destructive"
                   size="icon"

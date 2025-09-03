@@ -11,6 +11,7 @@ import {
   addDoc,
   arrayUnion,
   collection,
+  collectionGroup,
   deleteDoc,
   doc,
   documentId,
@@ -58,9 +59,27 @@ export const getPostDataByUid = async (
   postId: string
 ): Promise<PostType | Error> => {
   try {
-    const postDoc = await getDoc(doc(db, "posts", postId));
+    const commentsRef = collection(db, "posts", postId, "comments");
+    const commentsQuery = query(
+      commentsRef,
+      orderBy("createdAt", "desc"),
+      limit(20)
+    );
+
+    const [postDoc, commentsSnapshot] = await Promise.all([
+      getDoc(doc(db, "posts", postId)),
+      getDocs(commentsQuery),
+    ]);
+
     if (postDoc.exists()) {
-      return { ...(postDoc.data() as PostType), postUid: postDoc.id };
+      const postData = { ...(postDoc.data() as PostType), postUid: postDoc.id };
+      return {
+        ...postData,
+        comments: commentsSnapshot.docs.map((doc) => ({
+          ...(doc.data() as CommentType),
+          commentUid: doc.id,
+        })),
+      };
     } else {
       throw new Error("Post not found");
     }
@@ -161,20 +180,22 @@ export const userUnlikePost = async (postData: PostType, userId: string) => {
 
 export const addUserCommentOnPost = async (
   postData: PostType,
-  userId: string,
-  comment: string,
-  commentId: string
-) => {
+  userObj: {
+    id: string;
+    username: string;
+  },
+  comment: string
+): Promise<string | Error> => {
   try {
     const postRef = doc(db, "posts", postData.postUid);
-    await updateDoc(postRef, {
-      comments: arrayUnion({
-        commentId: commentId,
-        userUid: userId,
-        comment: comment,
-        createdAt: Timestamp.now(),
-      }),
-    });
+    const commentsRef = collection(postRef, "comments");
+    const newComment = {
+      user: userObj,
+      comment: comment,
+      createdAt: Timestamp.now(),
+    };
+    const docRef = await addDoc(commentsRef, newComment);
+    return docRef.id;
   } catch (error) {
     return error as Error;
   }
@@ -185,13 +206,9 @@ export const deleteCommentFromPost = async (
   commentToRemove: CommentType
 ) => {
   try {
-    const updatedCommentsList = postData.comments?.filter(
-      (c) => c.commentId !== commentToRemove.commentId
-    );
     const postRef = doc(db, "posts", postData.postUid);
-    await updateDoc(postRef, {
-      comments: updatedCommentsList,
-    });
+    const commentRef = doc(postRef, "comments", commentToRemove.commentUid);
+    await deleteDoc(commentRef);
   } catch (error) {
     return error as Error;
   }
@@ -234,6 +251,32 @@ export const updatePostUsernames = async (
         "user.username": newUsername,
       });
     });
+    await batch.commit();
+  } catch (error) {
+    return error as Error;
+  }
+};
+
+export const updateCommentUsernames = async (
+  userId: string,
+  newUsername: string
+) => {
+  try {
+    const commentsQuery = query(
+      collectionGroup(db, "comments"),
+      where("user.id", "==", userId)
+    );
+
+    const querySnapshot = await getDocs(commentsQuery);
+
+    const batch = writeBatch(db);
+    querySnapshot.forEach((doc) => {
+      const commentRef = doc.ref;
+      batch.update(commentRef, {
+        "user.username": newUsername,
+      });
+    });
+
     await batch.commit();
   } catch (error) {
     return error as Error;

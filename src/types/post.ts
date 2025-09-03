@@ -17,8 +17,11 @@ export type PostType = {
 };
 
 export type CommentType = {
-  userUid: string;
+  user: {
+    id: string;
+    username?: string;
+  };
   comment: string;
   createdAt: Timestamp;
-  commentId: string;
+  commentUid: string;
 };

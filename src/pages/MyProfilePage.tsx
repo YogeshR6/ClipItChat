@@ -9,6 +9,7 @@ import { uploadProfilePhotoToCloudinaryAndSaveUrlInFirestore } from "@/utils/clo
 import {
   getAllLikedPostsDataByUserUid,
   getAllPostsDataByUserUid,
+  updateCommentUsernames,
   updatePostUsernames,
 } from "@/utils/postFunctions";
 import { updateUserDetailsInFirestore } from "@/utils/userFunctions";
@@ -76,6 +77,7 @@ function MyProfilePage() {
     if (updatedUserDetails.username !== user.username) {
       // Handle username change on posts
       await updatePostUsernames(user.uid, updatedUserDetails.username || "");
+      await updateCommentUsernames(user.uid, updatedUserDetails.username || "");
     }
     setIsUserEditingDetails(false);
     setUser((prevUser) => {
