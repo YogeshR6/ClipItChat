@@ -16,6 +16,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Tabs } from "@/components/ui/tabs";
+import { Tab } from "@/types/misc";
 
 const TopBar: React.FC = () => {
   const { user, isLoggedIn } = useAuth();
@@ -34,6 +36,12 @@ const TopBar: React.FC = () => {
     router.push("/my-profile");
   };
 
+  const tabs: Tab[] = [
+    { title: "Home", value: "home" },
+    { title: "Discover", value: "posts" },
+    { title: "Upload", value: "upload" },
+  ];
+
   return (
     <div className="flex flex-row justify-between w-full items-center py-3 px-5">
       <Image
@@ -44,15 +52,25 @@ const TopBar: React.FC = () => {
         onClick={() => router.push("/")}
       />
       <div className="flex flex-row gap-5">
-        <Link href="/" className="p-2 rounded-md">
+        <Link
+          href="/"
+          className="p-2 rounded-md hover:underline underline-offset-2"
+        >
           Home
         </Link>
-        <Link href="/posts" className="p-2 rounded-md">
+        <Link
+          href="/posts"
+          className="p-2 rounded-md hover:underline underline-offset-2"
+        >
           Discover
         </Link>
-        <Link href="/upload" className="p-2 rounded-md">
+        <Link
+          href="/upload"
+          className="p-2 rounded-md hover:underline underline-offset-2"
+        >
           Upload
         </Link>
+        {/* <Tabs tabs={tabs} activeTabClassName="text-black" /> */}
       </div>
       <div>
         {isLoggedIn ? (
@@ -80,7 +98,9 @@ const TopBar: React.FC = () => {
           </>
         ) : (
           <Link href="/auth">
-            <Button variant="outline">Login / Signup</Button>
+            <Button className="bg-[#3361f4] hover:bg-[#2b52d4]">
+              Login / Signup
+            </Button>
           </Link>
         )}
       </div>
