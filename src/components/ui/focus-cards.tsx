@@ -3,6 +3,14 @@ import Image from "next/image";
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { PostType } from "@/types/post";
+import {
+  FaRegHeart,
+  FaRegComment,
+  FaHeart,
+  FaComments,
+  FaComment,
+} from "react-icons/fa";
+import { CgProfile } from "react-icons/cg";
 
 export const Card = React.memo(
   ({
@@ -35,12 +43,36 @@ export const Card = React.memo(
       />
       <div
         className={cn(
-          "absolute inset-0 bg-black/50 flex items-end py-8 px-4 transition-opacity duration-300",
+          "absolute inset-0 bg-black/50 flex flex-col items-start justify-end gap-3 py-8 px-4 transition-opacity duration-300",
           hovered === index ? "opacity-100" : "opacity-0"
         )}
       >
         <div className="text-xl md:text-2xl font-medium bg-clip-text text-transparent bg-gradient-to-b from-neutral-50 to-neutral-200">
+          {card.selectedGame.name}
+        </div>
+        <div className="text-xl md:text-2xl font-medium bg-clip-text text-transparent bg-gradient-to-b from-neutral-50 to-neutral-200 flex flex-row items-center justify-start gap-2">
+          <CgProfile className="text-white" />
           {card.user.username}
+        </div>
+        <div className="text-xl md:text-2xl font-medium bg-clip-text text-transparent bg-gradient-to-b from-neutral-50 to-neutral-200 flex flex-row items-center justify-start gap-5">
+          <div className="flex flex-row items-center justify-start gap-2">
+            {card.likes > 0 ? (
+              <FaHeart className="text-red-600" size="22" />
+            ) : (
+              <FaRegHeart className="text-white" size="22" />
+            )}{" "}
+            {card.likes || 0}
+          </div>
+          <div className="flex flex-row items-center justify-start gap-2">
+            {!card.comments?.length || card.comments?.length === 0 ? (
+              <FaRegComment className="text-white" size="22" />
+            ) : card.comments?.length === 1 ? (
+              <FaComment className="text-white" size="22" />
+            ) : (
+              <FaComments className="text-white" size="22" />
+            )}
+            {card.comments?.length || 0}
+          </div>
         </div>
       </div>
     </div>

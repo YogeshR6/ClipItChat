@@ -8,6 +8,7 @@ import { DirectionAwareHover } from "@/components/ui/direction-aware-hover";
 import { useRouter } from "next/navigation";
 import { PostType } from "@/types/post";
 import { Cover } from "@/components/ui/cover";
+import { CgProfile } from "react-icons/cg";
 
 const HomePage = () => {
   const router = useRouter();
@@ -19,9 +20,7 @@ const HomePage = () => {
   }, []);
 
   const getHomePageCards = async () => {
-    const getPostListsResponse = await getFirstPagePostsListResultUsingLimit(
-      10
-    );
+    const getPostListsResponse = await getFirstPagePostsListResultUsingLimit(5);
     if (!(getPostListsResponse instanceof Error)) {
       setHomePageCardsList(getPostListsResponse);
     }
@@ -57,7 +56,7 @@ const HomePage = () => {
           <MovingBorderButton
             variant="default"
             className="text-base bg-slate-900/[0.4] hover:bg-slate-900/[0.8]"
-            onClick={() => router.push("/posts")}
+            onClick={() => router.push("/upload")}
           >
             Start Sharing Now!
           </MovingBorderButton>
@@ -76,7 +75,10 @@ const HomePage = () => {
                   className="cursor-pointer"
                 >
                   <p className="font-bold text-xl">{card.selectedGame.name}</p>
-                  <p className="font-normal text-sm">{card.user.username}</p>
+                  <div className="flex flex-row items-center justify-start gap-1">
+                    <CgProfile className="text-white" />
+                    <p className="font-normal text-sm">{card.user.username}</p>
+                  </div>
                 </DirectionAwareHover>
               ))}
             </div>

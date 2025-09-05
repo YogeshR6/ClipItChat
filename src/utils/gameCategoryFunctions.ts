@@ -41,15 +41,9 @@ export const getRelevanceScore = (game: GameCategoryType, query: string) => {
 export const getGameCategoriesList = async (
   searchInput: string
 ): Promise<GameCategoryType[] | Error> => {
-  const user = auth.currentUser;
-  if (!user) throw new Error("User not authenticated");
   try {
-    const token = await user.getIdToken();
     const getGameListResponse = await fetch("/api/get-game-list", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
       body: JSON.stringify({ filterInput: searchInput }),
     });
     const filteredGameList = await getGameListResponse.json();

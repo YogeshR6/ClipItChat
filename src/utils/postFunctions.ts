@@ -118,6 +118,26 @@ export const getFirstPagePostsListResultUsingLimit = async (
   }
 };
 
+export const getFirstPagePostsListResultUsingLimitAndGameFilter = async (
+  limitCount: number,
+  gameFilterList: string[]
+) => {
+  try {
+    const q = query(
+      collection(db, "posts"),
+      where("selectedGame.guid", "in", gameFilterList),
+      orderBy("createdAt", "desc"),
+      limit(limitCount)
+    );
+    const postList = await getDocs(q);
+    return postList.docs.map((doc) => {
+      return { ...(doc.data() as PostType), postUid: doc.id };
+    });
+  } catch (error) {
+    return error as Error;
+  }
+};
+
 export const deletePostById = async (
   postData: PostType
 ): Promise<boolean | Error> => {

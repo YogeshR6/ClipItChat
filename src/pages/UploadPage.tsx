@@ -75,6 +75,7 @@ const UploadPage: React.FC = () => {
       gameSearchRef.current?.focus();
     }
   };
+
   const handleFileUpload = (file: File[]) => {
     setUploadedFile(file[0]);
     setError(null);
@@ -147,7 +148,7 @@ const UploadPage: React.FC = () => {
           onOpenChange={(open) => {
             if (open) {
               setGameSearchInput("");
-              setGameCategoryList([]);
+              setGameCategoryList(selectedGame ? [selectedGame] : []);
             }
           }}
         >
