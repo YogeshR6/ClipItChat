@@ -15,12 +15,14 @@ import {
 import { updateUserDetailsInFirestore } from "@/utils/userFunctions";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { VscAccount } from "react-icons/vsc";
+import { toast } from "sonner";
 
 function MyProfilePage() {
   const { user, setUser, isLoggedIn } = useAuth();
   const router = useRouter();
+  const hasRedirected = useRef(false);
 
   const [isUserEditingDetails, setIsUserEditingDetails] =
     useState<boolean>(false);
@@ -33,7 +35,13 @@ function MyProfilePage() {
   );
 
   useEffect(() => {
-    if (isLoggedIn === false) {
+    if (isLoggedIn === false && !hasRedirected.current) {
+      hasRedirected.current = true;
+
+      toast.error("You need to be logged in to post.", {
+        duration: 4000,
+        closeButton: true,
+      });
       router.replace("/auth");
     }
   }, [isLoggedIn, router]);

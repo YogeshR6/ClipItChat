@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { IoMdSend } from "react-icons/io";
 import { MdDelete } from "react-icons/md";
+import { toast } from "sonner";
 
 interface ViewPostPageProps {
   postId: string;
@@ -27,12 +28,6 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
 
   const [postData, setPostData] = useState<PostType | null>(null);
   const [newComment, setNewComment] = useState<string>("");
-
-  useEffect(() => {
-    if (isLoggedIn === false) {
-      router.replace("/auth");
-    }
-  }, [isLoggedIn, router]);
 
   useEffect(() => {
     fetchPostData(postId);
@@ -49,7 +44,20 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
   };
 
   const handleUserLikePost = async () => {
-    if (postData && user) {
+    if (isLoggedIn === false) {
+      toast.error("You need to be logged in to like a post.", {
+        duration: 4000,
+        closeButton: true,
+        action: {
+          label: "Login",
+          onClick: () => {
+            router.push("/auth");
+          },
+        },
+      });
+      return;
+    }
+    if (postData && user && user.uid) {
       if (user.likedPosts?.includes(postId)) {
         await userUnlikePost(postData, user.uid);
         // Optimistically update the UI
@@ -91,6 +99,19 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
   };
 
   const handleAddComment = async () => {
+    if (isLoggedIn === false) {
+      toast.error("You need to be logged in to comment.", {
+        duration: 4000,
+        closeButton: true,
+        action: {
+          label: "Login",
+          onClick: () => {
+            router.push("/auth");
+          },
+        },
+      });
+      return;
+    }
     if (newComment.trim() === "" || !postData || !user) return;
 
     const addUserCommentResponse = await addUserCommentOnPost(
@@ -141,10 +162,6 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
       return prevData;
     });
   };
-
-  if (isLoggedIn === false) {
-    return <></>;
-  }
 
   return (
     <div className="flex flex-row gap-4 items-start justify-center p-5">

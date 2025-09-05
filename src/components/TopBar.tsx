@@ -14,15 +14,36 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Tabs } from "@/components/ui/tabs";
 import { Tab } from "@/types/misc";
+import { useEffect, useState } from "react";
+
+const tabs: Tab[] = [
+  { title: "Home", value: "home" },
+  { title: "Discover", value: "posts" },
+  { title: "Upload", value: "upload" },
+];
 
 const TopBar: React.FC = () => {
   const { user, isLoggedIn } = useAuth();
 
   const router = useRouter();
+  const pathname = usePathname();
+
+  const [active, setActive] = useState<Tab | null>(tabs[0]);
+
+  useEffect(() => {
+    const currentTab = tabs.find((tab) => pathname?.includes(tab.value));
+    if (currentTab) {
+      setActive(currentTab);
+    } else if (pathname === "/") {
+      setActive(tabs[0]);
+    } else {
+      setActive(null);
+    }
+  }, [pathname]);
 
   const handleUserLogout = async () => {
     try {
@@ -36,12 +57,6 @@ const TopBar: React.FC = () => {
     router.push("/my-profile");
   };
 
-  const tabs: Tab[] = [
-    { title: "Home", value: "home" },
-    { title: "Discover", value: "posts" },
-    { title: "Upload", value: "upload" },
-  ];
-
   return (
     <div className="flex flex-row justify-between w-full items-center py-3 px-5">
       <Image
@@ -52,25 +67,7 @@ const TopBar: React.FC = () => {
         onClick={() => router.push("/")}
       />
       <div className="flex flex-row gap-5">
-        <Link
-          href="/"
-          className="p-2 rounded-md hover:underline underline-offset-2"
-        >
-          Home
-        </Link>
-        <Link
-          href="/posts"
-          className="p-2 rounded-md hover:underline underline-offset-2"
-        >
-          Discover
-        </Link>
-        <Link
-          href="/upload"
-          className="p-2 rounded-md hover:underline underline-offset-2"
-        >
-          Upload
-        </Link>
-        {/* <Tabs tabs={tabs} activeTabClassName="text-black" /> */}
+        <Tabs tabs={tabs} activeTab={active} setActiveTab={setActive} />
       </div>
       <div>
         {isLoggedIn ? (

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import TopBar from "@/components/TopBar";
 import { AuthProvider } from "@/hooks/contexts/AuthContext";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "Clip It Chat",
@@ -19,6 +20,7 @@ export default function RootLayout({
         <AuthProvider>
           <TopBar />
           {children}
+          <Toaster />
         </AuthProvider>
       </body>
     </html>

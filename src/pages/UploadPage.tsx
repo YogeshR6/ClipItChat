@@ -19,11 +19,13 @@ import { getGameCategoriesList } from "@/utils/gameCategoryFunctions";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 const UploadPage: React.FC = () => {
   const { user, isLoggedIn } = useAuth();
   const router = useRouter();
   const gameSearchRef = useRef<HTMLInputElement>(null);
+  const hasRedirected = useRef(false);
 
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [gameCategoryList, setGameCategoryList] = useState<GameCategoryType[]>(
@@ -37,7 +39,13 @@ const UploadPage: React.FC = () => {
   const [error, setError] = useState<UploadPageErrorType>(null);
 
   useEffect(() => {
-    if (isLoggedIn === false) {
+    if (isLoggedIn === false && !hasRedirected.current) {
+      hasRedirected.current = true;
+
+      toast.error("You need to be logged in to post.", {
+        duration: 4000,
+        closeButton: true,
+      });
       router.replace("/auth");
     }
   }, [isLoggedIn, router]);
