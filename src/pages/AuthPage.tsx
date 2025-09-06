@@ -10,9 +10,16 @@ import {
 import { FcGoogle } from "react-icons/fc";
 import { useRouter } from "next/navigation";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { AuthSegmentControl } from "@/components/ui/tabs";
+import { AuthFormType } from "@/types/misc";
+
+const AuthSegmentControlTabs = [
+  { title: "Login", value: "login" },
+  { title: "Sign up", value: "signup" },
+];
 
 const AuthPage: React.FC = () => {
-  const [formType, setFormType] = useState("login");
+  const [formType, setFormType] = useState<AuthFormType>("login");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -117,15 +124,16 @@ const AuthPage: React.FC = () => {
     }
   };
 
-  const handleFormTypeChange = () => {
-    setFormType(formType === "login" ? "signup" : "login");
-  };
-
   return (
-    <div className="flex flex-col items-center justify-center gap-10">
-      <h1>Auth Page</h1>
-      <div className="flex flex-col justify-center items-center gap-1 w-max min-w-[300px]">
-        <h1>{formType === "login" ? "Login" : "Sign up"}</h1>
+    <div className="flex items-center justify-center pt-20">
+      <div className="flex flex-col justify-center items-center gap-4 w-max min-w-[350px] bg-white rounded-xl p-5">
+        <div className="rounded-full bg-gray-300 flex flex-row items-center justify-center w-full">
+          <AuthSegmentControl
+            activeTab={formType}
+            setActiveTab={setFormType}
+            tabs={AuthSegmentControlTabs}
+          />
+        </div>
         <form
           onSubmit={formType === "login" ? handleUserLogin : handleUserSignUp}
           className="flex flex-col gap-3 w-full"
@@ -177,41 +185,31 @@ const AuthPage: React.FC = () => {
           </p>
           <div className="flex gap-5 w-full justify-center items-center">
             {formType === "signup" ? (
-              <>
-                <Button type="submit" className="w-1/2">
-                  Sign up
-                </Button>
-                <Button
-                  onClick={handleFormTypeChange}
-                  variant="outline"
-                  className="w-1/2"
-                  type="button"
-                >
-                  Login
-                </Button>
-              </>
+              <Button
+                type="submit"
+                className="w-full bg-[#3361f4] hover:bg-[#2b52d4]"
+              >
+                Sign up
+              </Button>
             ) : (
-              <>
-                <Button type="submit" className="w-1/2">
-                  Login
-                </Button>
-                <Button
-                  onClick={handleFormTypeChange}
-                  variant="outline"
-                  className="w-1/2"
-                  type="button"
-                >
-                  Sign up
-                </Button>
-              </>
+              <Button
+                type="submit"
+                className="w-full bg-[#3361f4] hover:bg-[#2b52d4]"
+              >
+                Login
+              </Button>
             )}
           </div>
           <Button
             type="button"
             variant="outline"
             onClick={handleUserSignUpWithGoogle}
+            className="text-black"
           >
-            <FcGoogle /> Login with Google
+            <FcGoogle />{" "}
+            {formType === "signup"
+              ? "Sign up with Google"
+              : "Login with Google"}
           </Button>
         </form>
       </div>

@@ -141,8 +141,8 @@ function MyProfilePage() {
                 alt="profile image"
                 style={{ fontSize: 64 }}
               />
-              <AvatarFallback>
-                <VscAccount style={{ fontSize: 64 }} />
+              <AvatarFallback className="bg-transparent">
+                <VscAccount size="64" />
               </AvatarFallback>
             </Avatar>
             <input

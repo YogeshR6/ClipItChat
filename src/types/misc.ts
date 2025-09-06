@@ -18,3 +18,5 @@ export type Tab = {
   title: string;
   value: string;
 };
+
+export type AuthFormType = "login" | "signup";

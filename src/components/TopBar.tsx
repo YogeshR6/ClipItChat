@@ -76,8 +76,8 @@ const TopBar: React.FC = () => {
               <DropdownMenuTrigger>
                 <Avatar>
                   <AvatarImage src={user?.photoUrl} alt="profile image" />
-                  <AvatarFallback>
-                    <CgProfile style={{ fontSize: 25 }} />
+                  <AvatarFallback className="bg-transparent">
+                    <CgProfile size="25" />
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
