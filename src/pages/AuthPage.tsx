@@ -1,8 +1,9 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
+  sendEmailVerificationAgain,
   userSignInWithEmailAndPassword,
   userSignInWithGoogle,
   userSignUpWithEmailAndPassword,
@@ -12,6 +13,17 @@ import { useRouter } from "next/navigation";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { AuthSegmentControl } from "@/components/ui/tabs";
 import { AuthFormType } from "@/types/misc";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { FaCheck } from "react-icons/fa6";
 
 const AuthSegmentControlTabs = [
   { title: "Login", value: "login" },
@@ -30,8 +42,21 @@ const AuthPage: React.FC = () => {
     password: false,
     passwordConfirm: false,
   });
+  const [authLoading, setAuthLoading] = useState<boolean>(false);
+  const [showVerificationEmailPopup, setShowVerificationEmailPopup] =
+    useState<boolean>(false);
+  const [showEmailNotVerifiedPopup, setShowEmailNotVerifiedPopup] =
+    useState<boolean>(false);
+  const [
+    sendVerificationEmailAgainStatus,
+    setSendVerificationEmailAgainStatus,
+  ] = useState<"idle" | "sending" | "sent">("idle");
 
   const router = useRouter();
+
+  useEffect(() => {
+    setError("");
+  }, [formType]);
 
   const handleUserLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -40,14 +65,20 @@ const AuthPage: React.FC = () => {
       return;
     }
     try {
-      const { user } = await userSignInWithEmailAndPassword(
+      setError("");
+      setAuthLoading(true);
+      const user = await userSignInWithEmailAndPassword(
         formData.email,
         formData.password
       );
       if (user) {
-        router.push("/");
+        router.replace("/");
+      } else if (user === false) {
+        setShowEmailNotVerifiedPopup(true);
       }
+      setAuthLoading(false);
     } catch (error) {
+      setAuthLoading(false);
       handleAuthError(error);
     }
   };
@@ -66,7 +97,7 @@ const AuthPage: React.FC = () => {
   const handleUserSignUpWithGoogle = async () => {
     try {
       const userSignUpResponse = await userSignInWithGoogle();
-      if (userSignUpResponse) router.push("/");
+      if (userSignUpResponse) router.replace("/");
     } catch (error: any) {
       handleAuthError(error);
     }
@@ -83,14 +114,42 @@ const AuthPage: React.FC = () => {
       return;
     }
     try {
+      setError("");
+      setAuthLoading(true);
       const userSignUpResponse = await userSignUpWithEmailAndPassword(
         formData.email,
         formData.password
       );
-      if (userSignUpResponse) router.push("/");
+      if (userSignUpResponse) setShowVerificationEmailPopup(true);
+      setAuthLoading(false);
     } catch (error: any) {
+      setAuthLoading(false);
       handleAuthError(error);
     }
+  };
+
+  const handleSendVerificationAgain = async () => {
+    if (sendVerificationEmailAgainStatus === "idle") {
+      setSendVerificationEmailAgainStatus("sending");
+      const response = await sendEmailVerificationAgain();
+      if (response instanceof Error) {
+        setSendVerificationEmailAgainStatus("idle");
+        setError("An unexpected error occurred. Please try again.");
+        return;
+      }
+      setSendVerificationEmailAgainStatus("sent");
+      setTimeout(() => {
+        setSendVerificationEmailAgainStatus("idle");
+      }, 1000);
+    }
+  };
+
+  const handleContinueToLogin = (resetPassword: boolean) => {
+    setFormType("login");
+    setShowEmailNotVerifiedPopup(false);
+    setShowVerificationEmailPopup(false);
+    if (resetPassword)
+      setFormData((prev) => ({ ...prev, password: "", passwordConfirm: "" }));
   };
 
   const handleAuthError = (error: any) => {
@@ -125,95 +184,194 @@ const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center pt-20">
-      <div className="flex flex-col justify-center items-center gap-4 w-max min-w-[350px] bg-white rounded-xl p-5">
-        <div className="rounded-full bg-gray-300 flex flex-row items-center justify-center w-full">
-          <AuthSegmentControl
-            activeTab={formType}
-            setActiveTab={setFormType}
-            tabs={AuthSegmentControlTabs}
-          />
-        </div>
-        <form
-          onSubmit={formType === "login" ? handleUserLogin : handleUserSignUp}
-          className="flex flex-col gap-3 w-full"
-        >
-          <Input
-            id="email"
-            placeholder="Email*"
-            name="email"
-            value={formData.email}
-            onChange={handleFormDataChange}
-          />
-          <Input
-            id="password"
-            placeholder="Password*"
-            name="password"
-            value={formData.password}
-            onChange={handleFormDataChange}
-            type={showPassword.password ? "text" : "password"}
-            icon={showPassword.password ? FaEyeSlash : FaEye}
-            onIconClick={() => {
-              setShowPassword({
-                ...showPassword,
-                password: !showPassword.password,
-              });
-            }}
-          />
-          {formType === "signup" && (
+    <>
+      <div className="flex items-center justify-center pt-20">
+        <div className="flex flex-col justify-center items-center gap-4 min-w-[400px] bg-white rounded-xl p-5">
+          <div className="rounded-full bg-gray-300 flex flex-row items-center justify-center w-full">
+            <AuthSegmentControl
+              activeTab={formType}
+              setActiveTab={setFormType}
+              tabs={AuthSegmentControlTabs}
+            />
+          </div>
+          <form
+            onSubmit={formType === "login" ? handleUserLogin : handleUserSignUp}
+            className="flex flex-col gap-3 w-full"
+          >
             <Input
-              id="passwordConfirm"
-              placeholder="Confirm Password*"
-              name="passwordConfirm"
-              value={formData.passwordConfirm}
+              id="email"
+              placeholder="Email*"
+              name="email"
+              value={formData.email}
               onChange={handleFormDataChange}
-              type={showPassword.passwordConfirm ? "text" : "password"}
-              icon={showPassword.passwordConfirm ? FaEyeSlash : FaEye}
+              className="text-black"
+              tabIndex={1}
+              autoFocus
+            />
+            <Input
+              id="password"
+              placeholder="Password*"
+              name="password"
+              value={formData.password}
+              onChange={handleFormDataChange}
+              className="text-black"
+              type={showPassword.password ? "text" : "password"}
+              icon={showPassword.password ? FaEyeSlash : FaEye}
               onIconClick={() => {
                 setShowPassword({
                   ...showPassword,
-                  passwordConfirm: !showPassword.passwordConfirm,
+                  password: !showPassword.password,
                 });
               }}
+              tabIndex={2}
             />
-          )}
-          <p
-            className="text-red-500"
-            style={{ visibility: error ? "visible" : "hidden" }}
-          >
-            {error}
-          </p>
-          <div className="flex gap-5 w-full justify-center items-center">
-            {formType === "signup" ? (
-              <Button
-                type="submit"
-                className="w-full bg-[#3361f4] hover:bg-[#2b52d4]"
-              >
-                Sign up
-              </Button>
-            ) : (
-              <Button
-                type="submit"
-                className="w-full bg-[#3361f4] hover:bg-[#2b52d4]"
-              >
-                Login
-              </Button>
+            {formType === "signup" && (
+              <Input
+                id="passwordConfirm"
+                placeholder="Confirm Password*"
+                name="passwordConfirm"
+                value={formData.passwordConfirm}
+                onChange={handleFormDataChange}
+                className="text-black"
+                type={showPassword.passwordConfirm ? "text" : "password"}
+                icon={showPassword.passwordConfirm ? FaEyeSlash : FaEye}
+                onIconClick={() => {
+                  setShowPassword({
+                    ...showPassword,
+                    passwordConfirm: !showPassword.passwordConfirm,
+                  });
+                }}
+                tabIndex={3}
+              />
             )}
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleUserSignUpWithGoogle}
-            className="text-black"
-          >
-            <FcGoogle />{" "}
-            {formType === "signup"
-              ? "Sign up with Google"
-              : "Login with Google"}
-          </Button>
-        </form>
+            <p
+              className="text-red-500 text-wrap"
+              style={{ visibility: error ? "visible" : "hidden" }}
+            >
+              {error}
+            </p>
+            <div className="flex gap-5 w-full justify-center items-center">
+              {formType === "signup" ? (
+                <Button
+                  type="submit"
+                  className="w-full bg-[#3361f4] hover:bg-[#2b52d4]"
+                >
+                  {authLoading ? (
+                    <AiOutlineLoading3Quarters className="animate-spin" />
+                  ) : (
+                    "Sign up"
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  className="w-full bg-[#3361f4] hover:bg-[#2b52d4]"
+                >
+                  {authLoading ? (
+                    <AiOutlineLoading3Quarters className="animate-spin" />
+                  ) : (
+                    "Login"
+                  )}
+                </Button>
+              )}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleUserSignUpWithGoogle}
+              className="text-black"
+            >
+              <FcGoogle />{" "}
+              {formType === "signup"
+                ? "Sign up with Google"
+                : "Login with Google"}
+            </Button>
+          </form>
+        </div>
       </div>
-    </div>
+      <Dialog
+        open={showVerificationEmailPopup}
+        onOpenChange={setShowVerificationEmailPopup}
+      >
+        <DialogContent className="[&>button>svg]:text-black">
+          <DialogHeader>
+            <DialogTitle className="text-black mb-3">
+              Verification Email Successfully Sent!
+            </DialogTitle>
+            <DialogDescription className="text-black">
+              Kindly check for verification email sent to your email address.
+              <br />
+              Make sure to check the spam folder as well.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button
+                className="bg-[#3361f4] hover:bg-[#2b52d4]"
+                onClick={() => handleContinueToLogin(true)}
+              >
+                Continue to Login
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={showEmailNotVerifiedPopup}
+        onOpenChange={setShowEmailNotVerifiedPopup}
+      >
+        <DialogContent className="[&>button>svg]:text-black">
+          <DialogHeader>
+            <DialogTitle className="text-black mb-3">
+              Please Verify Your Email!
+            </DialogTitle>
+            <DialogDescription className="text-black">
+              Kindly verify your account through the verification email sent to
+              your email address.
+              <br />
+              Make sure to check the spam folder as well.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button
+                variant="outline"
+                onClick={handleSendVerificationAgain}
+                className="text-black"
+                style={{
+                  cursor:
+                    sendVerificationEmailAgainStatus !== "idle"
+                      ? "not-allowed"
+                      : "pointer",
+                }}
+              >
+                {sendVerificationEmailAgainStatus === "idle" ? (
+                  "Send Verification Again"
+                ) : sendVerificationEmailAgainStatus === "sending" ? (
+                  <>
+                    <AiOutlineLoading3Quarters className="animate-spin" />
+                    <p>Sending..</p>
+                  </>
+                ) : (
+                  <>
+                    <FaCheck className="text-white bg-[#23b93d] rounded-full p-[2px]" />
+                    <p>Sent!</p>
+                  </>
+                )}
+              </Button>
+            </DialogClose>
+            <DialogClose asChild>
+              <Button
+                className="bg-[#3361f4] hover:bg-[#2b52d4]"
+                onClick={() => handleContinueToLogin(false)}
+              >
+                Continue to Login
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

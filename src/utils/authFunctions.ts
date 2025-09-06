@@ -2,6 +2,8 @@ import { auth, googleProvider } from "./firebase";
 import {
   createUserWithEmailAndPassword,
   getAdditionalUserInfo,
+  getAuth,
+  sendEmailVerification,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
@@ -14,10 +16,10 @@ export const userSignUpWithEmailAndPassword = async (
 ) => {
   const { user } = await createUserWithEmailAndPassword(auth, email, password);
   if (user?.email) {
-    const userSignUpResponse = await handleUserSignUpAddToCollection(
-      user.email,
-      user.uid
-    );
+    const [userSignUpResponse, verifyUserResponse] = await Promise.all([
+      handleUserSignUpAddToCollection(user.email, user.uid),
+      sendEmailVerification(user),
+    ]);
     return userSignUpResponse;
   }
 };
@@ -26,7 +28,21 @@ export const userSignInWithEmailAndPassword = async (
   email: string,
   password: string
 ) => {
-  return signInWithEmailAndPassword(auth, email, password);
+  const userSignInWithEmailResponse = await signInWithEmailAndPassword(
+    auth,
+    email,
+    password
+  );
+  if (
+    !userSignInWithEmailResponse ||
+    userSignInWithEmailResponse instanceof Error
+  ) {
+    return;
+  } else if (userSignInWithEmailResponse.user.emailVerified) {
+    return userSignInWithEmailResponse.user;
+  } else {
+    return false;
+  }
 };
 
 export const userSignInWithGoogle = async () => {
@@ -52,4 +68,18 @@ export const userSignInWithGoogle = async () => {
 
 export const userSignOut = async () => {
   return signOut(auth);
+};
+
+export const sendEmailVerificationAgain = async (): Promise<void | Error> => {
+  try {
+    const userObj = auth.currentUser;
+    if (userObj) {
+      const sendEmailVerificationResponse = await sendEmailVerification(
+        userObj
+      );
+      return sendEmailVerificationResponse;
+    }
+  } catch (error) {
+    return error as Error;
+  }
 };

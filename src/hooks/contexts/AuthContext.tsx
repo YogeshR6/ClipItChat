@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     onAuthStateChanged(auth, async (user) => {
-      if (user) {
+      if (user && user.emailVerified) {
         const userDetails = (await getUserDetailsFromAuthUid(
           user.uid
         )) as UserType;
