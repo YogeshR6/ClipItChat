@@ -2,8 +2,8 @@ import { auth, googleProvider } from "./firebase";
 import {
   createUserWithEmailAndPassword,
   getAdditionalUserInfo,
-  getAuth,
   sendEmailVerification,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
@@ -79,6 +79,20 @@ export const sendEmailVerificationAgain = async (): Promise<void | Error> => {
       );
       return sendEmailVerificationResponse;
     }
+  } catch (error) {
+    return error as Error;
+  }
+};
+
+export const sendForgotPasswordEmail = async (
+  email: string
+): Promise<void | Error> => {
+  try {
+    const sendForgotPasswordEmailResponse = await sendPasswordResetEmail(
+      auth,
+      email
+    );
+    return sendForgotPasswordEmailResponse;
   } catch (error) {
     return error as Error;
   }

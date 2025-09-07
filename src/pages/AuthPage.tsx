@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   sendEmailVerificationAgain,
+  sendForgotPasswordEmail,
   userSignInWithEmailAndPassword,
   userSignInWithGoogle,
   userSignUpWithEmailAndPassword,
@@ -24,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { FaCheck } from "react-icons/fa6";
+import { useAuth } from "@/hooks/contexts/AuthContext";
 
 const AuthSegmentControlTabs = [
   { title: "Login", value: "login" },
@@ -31,6 +33,9 @@ const AuthSegmentControlTabs = [
 ];
 
 const AuthPage: React.FC = () => {
+  const { isLoggedIn } = useAuth();
+  const router = useRouter();
+
   const [formType, setFormType] = useState<AuthFormType>("login");
   const [formData, setFormData] = useState({
     email: "",
@@ -51,12 +56,20 @@ const AuthPage: React.FC = () => {
     sendVerificationEmailAgainStatus,
     setSendVerificationEmailAgainStatus,
   ] = useState<"idle" | "sending" | "sent">("idle");
-
-  const router = useRouter();
+  const [showForgotPasswordPopup, setShowForgotPasswordPopup] =
+    useState<boolean>(false);
+  const [forgotPasswordEmailInput, setForgotPasswordEmailInput] =
+    useState<string>("");
 
   useEffect(() => {
     setError("");
   }, [formType]);
+
+  useEffect(() => {
+    if (isLoggedIn === true) {
+      router.replace("/");
+    }
+  }, [isLoggedIn, router]);
 
   const handleUserLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -152,6 +165,39 @@ const AuthPage: React.FC = () => {
       setFormData((prev) => ({ ...prev, password: "", passwordConfirm: "" }));
   };
 
+  const handleForgotPassword = () => {
+    setShowForgotPasswordPopup(true);
+    setError("");
+    setForgotPasswordEmailInput(formData.email || "");
+  };
+
+  const handleBackToLogin = () => {
+    setShowForgotPasswordPopup(false);
+    setForgotPasswordEmailInput("");
+    setError("");
+  };
+
+  const handleSendForgotPasswordEmail = async () => {
+    if (!forgotPasswordEmailInput || forgotPasswordEmailInput === "") {
+      setError("Please enter your email.");
+      return;
+    }
+    setSendVerificationEmailAgainStatus("sending");
+    setError("");
+    const sendForgotPasswordResponse = await sendForgotPasswordEmail(
+      forgotPasswordEmailInput
+    );
+    if (sendForgotPasswordResponse instanceof Error) {
+      setError("Error sending reset password email. Please try again!");
+      return;
+    }
+    setSendVerificationEmailAgainStatus("sent");
+    setTimeout(() => {
+      setSendVerificationEmailAgainStatus("idle");
+      setShowForgotPasswordPopup(false);
+    }, 1500);
+  };
+
   const handleAuthError = (error: any) => {
     switch (error.code) {
       case "auth/email-already-in-use":
@@ -202,6 +248,7 @@ const AuthPage: React.FC = () => {
               id="email"
               placeholder="Email*"
               name="email"
+              type="email"
               value={formData.email}
               onChange={handleFormDataChange}
               className="text-black"
@@ -225,7 +272,7 @@ const AuthPage: React.FC = () => {
               }}
               tabIndex={2}
             />
-            {formType === "signup" && (
+            {formType === "signup" ? (
               <Input
                 id="passwordConfirm"
                 placeholder="Confirm Password*"
@@ -243,6 +290,13 @@ const AuthPage: React.FC = () => {
                 }}
                 tabIndex={3}
               />
+            ) : (
+              <p
+                className="text-black self-end hover:text-[#0000EE] cursor-pointer"
+                onClick={handleForgotPassword}
+              >
+                Forgot Password?
+              </p>
             )}
             <p
               className="text-red-500 text-wrap"
@@ -333,33 +387,31 @@ const AuthPage: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <DialogClose asChild>
-              <Button
-                variant="outline"
-                onClick={handleSendVerificationAgain}
-                className="text-black"
-                style={{
-                  cursor:
-                    sendVerificationEmailAgainStatus !== "idle"
-                      ? "not-allowed"
-                      : "pointer",
-                }}
-              >
-                {sendVerificationEmailAgainStatus === "idle" ? (
-                  "Send Verification Again"
-                ) : sendVerificationEmailAgainStatus === "sending" ? (
-                  <>
-                    <AiOutlineLoading3Quarters className="animate-spin" />
-                    <p>Sending..</p>
-                  </>
-                ) : (
-                  <>
-                    <FaCheck className="text-white bg-[#23b93d] rounded-full p-[2px]" />
-                    <p>Sent!</p>
-                  </>
-                )}
-              </Button>
-            </DialogClose>
+            <Button
+              variant="outline"
+              onClick={handleSendVerificationAgain}
+              className="text-black"
+              style={{
+                cursor:
+                  sendVerificationEmailAgainStatus !== "idle"
+                    ? "not-allowed"
+                    : "pointer",
+              }}
+            >
+              {sendVerificationEmailAgainStatus === "idle" ? (
+                "Send Verification Again"
+              ) : sendVerificationEmailAgainStatus === "sending" ? (
+                <>
+                  <AiOutlineLoading3Quarters className="animate-spin" />
+                  <p>Sending..</p>
+                </>
+              ) : (
+                <>
+                  <FaCheck className="text-white bg-[#23b93d] rounded-full p-[2px]" />
+                  <p>Sent!</p>
+                </>
+              )}
+            </Button>
             <DialogClose asChild>
               <Button
                 className="bg-[#3361f4] hover:bg-[#2b52d4]"
@@ -368,6 +420,84 @@ const AuthPage: React.FC = () => {
                 Continue to Login
               </Button>
             </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={showForgotPasswordPopup}
+        onOpenChange={setShowForgotPasswordPopup}
+      >
+        <DialogContent className="[&>button>svg]:text-black">
+          <DialogHeader>
+            <DialogTitle className="text-black mb-3">
+              Forgot Your Password?
+            </DialogTitle>
+            <DialogDescription className="text-black">
+              Enter your email so that we can send you password reset link.
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            <Input
+              placeholder="Email*"
+              name="forgotPasswordEmail"
+              value={forgotPasswordEmailInput}
+              onChange={(e) => {
+                setForgotPasswordEmailInput(e.target.value);
+                setError("");
+              }}
+              className="text-black mb-1"
+              type="email"
+              onIconClick={() => {
+                setShowPassword({
+                  ...showPassword,
+                  passwordConfirm: !showPassword.passwordConfirm,
+                });
+              }}
+              tabIndex={1}
+              autoFocus
+            />
+            <p
+              className="text-red-500 text-wrap"
+              style={{ visibility: error ? "visible" : "hidden" }}
+            >
+              {error}
+            </p>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button
+                variant="outline"
+                onClick={handleBackToLogin}
+                className="text-black"
+              >
+                Back to Login
+              </Button>
+            </DialogClose>
+            <Button
+              className="bg-[#3361f4] hover:bg-[#2b52d4]"
+              onClick={handleSendForgotPasswordEmail}
+              disabled={error !== ""}
+              style={{
+                cursor:
+                  sendVerificationEmailAgainStatus !== "idle"
+                    ? "not-allowed"
+                    : "pointer",
+              }}
+            >
+              {sendVerificationEmailAgainStatus === "idle" ? (
+                "Send Email"
+              ) : sendVerificationEmailAgainStatus === "sending" ? (
+                <>
+                  <AiOutlineLoading3Quarters className="animate-spin" />
+                  <p>Sending..</p>
+                </>
+              ) : (
+                <>
+                  <FaCheck className="text-[#23b93d] bg-white rounded-full p-[2px]" />
+                  <p>Sent!</p>
+                </>
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
