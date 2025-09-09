@@ -95,7 +95,7 @@ const TopBar: React.FC = () => {
           </>
         ) : (
           <Link href="/auth">
-            <Button className="bg-[#3361f4] hover:bg-[#2b52d4]">
+            <Button className="bg-[#4b5085] hover:bg-[#35385e]">
               Login / Signup
             </Button>
           </Link>

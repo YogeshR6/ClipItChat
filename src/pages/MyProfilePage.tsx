@@ -37,8 +37,7 @@ function MyProfilePage() {
   useEffect(() => {
     if (isLoggedIn === false && !hasRedirected.current) {
       hasRedirected.current = true;
-
-      toast.error("You need to be logged in to post.", {
+      toast.error("Please login to continue!", {
         duration: 4000,
         closeButton: true,
       });

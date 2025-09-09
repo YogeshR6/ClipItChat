@@ -54,7 +54,7 @@ export const Tabs = ({
                 layoutId="clickedbutton"
                 transition={{ type: "spring", bounce: 0.3, duration: 0.6 }}
                 className={cn(
-                  "absolute inset-0 bg-[#3361f4] rounded-full",
+                  "absolute inset-0 bg-[#4b5085] rounded-full",
                   activeTabClassName
                 )}
               />
@@ -119,7 +119,7 @@ export const AuthSegmentControl = ({
                 layoutId="clickedauthbutton"
                 transition={{ type: "spring", bounce: 0.3, duration: 0.6 }}
                 className={cn(
-                  "absolute inset-0 bg-[#3361f4] rounded-full",
+                  "absolute inset-0 bg-[#4b5085] rounded-full",
                   activeTabClassName
                 )}
               />

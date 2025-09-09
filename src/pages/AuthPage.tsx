@@ -308,7 +308,7 @@ const AuthPage: React.FC = () => {
               {formType === "signup" ? (
                 <Button
                   type="submit"
-                  className="w-full bg-[#3361f4] hover:bg-[#2b52d4]"
+                  className="w-full bg-[#4b5085] hover:bg-[#35385e]"
                 >
                   {authLoading ? (
                     <AiOutlineLoading3Quarters className="animate-spin" />
@@ -319,7 +319,7 @@ const AuthPage: React.FC = () => {
               ) : (
                 <Button
                   type="submit"
-                  className="w-full bg-[#3361f4] hover:bg-[#2b52d4]"
+                  className="w-full bg-[#4b5085] hover:bg-[#35385e]"
                 >
                   {authLoading ? (
                     <AiOutlineLoading3Quarters className="animate-spin" />
@@ -361,7 +361,7 @@ const AuthPage: React.FC = () => {
           <DialogFooter>
             <DialogClose asChild>
               <Button
-                className="bg-[#3361f4] hover:bg-[#2b52d4]"
+                className="bg-[#4b5085] hover:bg-[#35385e]"
                 onClick={() => handleContinueToLogin(true)}
               >
                 Continue to Login
@@ -414,7 +414,7 @@ const AuthPage: React.FC = () => {
             </Button>
             <DialogClose asChild>
               <Button
-                className="bg-[#3361f4] hover:bg-[#2b52d4]"
+                className="bg-[#4b5085] hover:bg-[#35385e]"
                 onClick={() => handleContinueToLogin(false)}
               >
                 Continue to Login
@@ -474,7 +474,7 @@ const AuthPage: React.FC = () => {
               </Button>
             </DialogClose>
             <Button
-              className="bg-[#3361f4] hover:bg-[#2b52d4]"
+              className="bg-[#4b5085] hover:bg-[#35385e]"
               onClick={handleSendForgotPasswordEmail}
               disabled={error !== ""}
               style={{
