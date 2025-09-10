@@ -1,6 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,7 +26,14 @@ import { uploadUserPostImageToCloudinaryAndSaveInfoInFirestore } from "@/utils/c
 import { getGameCategoriesList } from "@/utils/gameCategoryFunctions";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  SyntheticEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import ReactCrop, { centerCrop, Crop, makeAspectCrop } from "react-image-crop";
 import { toast } from "sonner";
 
 const UploadPage: React.FC = () => {
@@ -26,6 +41,7 @@ const UploadPage: React.FC = () => {
   const router = useRouter();
   const gameSearchRef = useRef<HTMLInputElement>(null);
   const hasRedirected = useRef(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [gameCategoryList, setGameCategoryList] = useState<GameCategoryType[]>(
@@ -37,6 +53,9 @@ const UploadPage: React.FC = () => {
     null
   );
   const [error, setError] = useState<UploadPageErrorType>(null);
+  const [crop, setCrop] = useState<Crop>();
+  const [showImageCropPopup, setShowImageCropPopup] = useState<boolean>(false);
+  const [croppedFile, setCroppedFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (isLoggedIn === false && !hasRedirected.current) {
@@ -60,6 +79,21 @@ const UploadPage: React.FC = () => {
     };
   }, [gameSearchInput]);
 
+  const imgSrc = useMemo(() => {
+    if (uploadedFile) {
+      return URL.createObjectURL(uploadedFile);
+    }
+  }, [uploadedFile]);
+
+  useEffect(() => {
+    // This is the cleanup function that will run when the component unmounts
+    return () => {
+      if (imgSrc) {
+        URL.revokeObjectURL(imgSrc);
+      }
+    };
+  }, [imgSrc]);
+
   const fetchGameCategories = async () => {
     if (gameSearchInput.length > 2) {
       setGameSearchLoading(true);
@@ -78,19 +112,20 @@ const UploadPage: React.FC = () => {
 
   const handleFileUpload = (file: File[]) => {
     setUploadedFile(file[0]);
+    setShowImageCropPopup(true);
     setError(null);
   };
 
   const handleUserNewPostUpload = async () => {
-    if (!uploadedFile || !selectedGame) {
+    if (!croppedFile || !selectedGame) {
       return setError({
-        missingFile: !uploadedFile,
+        missingFile: !croppedFile,
         missingGame: !selectedGame,
       });
     }
-    if ((user.imageStorageUsed || 0) + uploadedFile.size / 1048576 > 100) {
+    if ((user.imageStorageUsed || 0) + croppedFile.size / 1048576 > 100) {
       return setError({
-        missingFile: !uploadedFile,
+        missingFile: !croppedFile,
         missingGame: !selectedGame,
         storageLimit: true,
       });
@@ -98,7 +133,7 @@ const UploadPage: React.FC = () => {
     if (user) {
       const newPostId =
         await uploadUserPostImageToCloudinaryAndSaveInfoInFirestore(
-          uploadedFile,
+          croppedFile,
           {
             id: user.uid,
             username: user.username,
@@ -107,6 +142,81 @@ const UploadPage: React.FC = () => {
         );
       router.push(`/posts/${newPostId}`);
     }
+  };
+
+  const onCroppingImageLoad = (e: SyntheticEvent<HTMLImageElement>) => {
+    console.log("here");
+    const { naturalWidth: width, naturalHeight: height } = e.currentTarget;
+
+    const crop = centerCrop(
+      makeAspectCrop(
+        {
+          unit: "%",
+          width: 90,
+        },
+        16 / 9,
+        width,
+        height
+      ),
+      width,
+      height
+    );
+
+    setCrop(crop);
+  };
+
+  const handleCropImage = async () => {
+    const image = imgRef.current;
+    if (!image || !crop || !uploadedFile) {
+      console.error("Missing required data for cropping.");
+      return;
+    }
+
+    const canvas = document.createElement("canvas");
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+    canvas.width = crop.width * scaleX;
+    canvas.height = crop.height * scaleY;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.drawImage(
+      image,
+      crop.x * scaleX,
+      crop.y * scaleY,
+      crop.width * scaleX,
+      crop.height * scaleY,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          console.error("Canvas is empty");
+          return;
+        }
+
+        const fileNameParts = uploadedFile.name.split(".");
+        const fileExtension = fileNameParts.pop();
+        const baseName = fileNameParts.join(".");
+        const newFileName = `${baseName}-cropped.${fileExtension}`;
+
+        const croppedFile = new File([blob], newFileName, {
+          type: blob.type,
+        });
+
+        // Set the new File object in state
+        setCroppedFile(croppedFile);
+
+        // Close the popup
+        setShowImageCropPopup(false);
+      },
+      "image/png",
+      1
+    );
   };
 
   if (isLoggedIn === false) {
@@ -119,21 +229,20 @@ const UploadPage: React.FC = () => {
 
   return (
     <div className="flex flex-col w-full justify-start items-center gap-5">
-      <h2>Upload Page</h2>
-      <div className="w-[50%] border-2">
-        {uploadedFile ? (
-          <div>
-            <h3>Uploaded File:</h3>
-            <p>{uploadedFile.size}</p>
+      <div className="w-full border-2">
+        {!uploadedFile ? (
+          <div className="w-[30%]">
+            <FileUpload onChange={handleFileUpload} />
+          </div>
+        ) : (
+          croppedFile && (
             <Image
-              src={URL.createObjectURL(uploadedFile)}
+              src={URL.createObjectURL(croppedFile)}
               alt="Uploaded"
               width={200}
               height={200}
             />
-          </div>
-        ) : (
-          <FileUpload onChange={handleFileUpload} />
+          )
         )}
       </div>
       <div className="flex flex-row gap-5 justify-center items-center">
@@ -203,7 +312,13 @@ const UploadPage: React.FC = () => {
         </p>
       )}
       <div className="flex flex-row gap-5">
-        <Button type="button" onClick={() => setUploadedFile(null)}>
+        <Button
+          type="button"
+          onClick={() => {
+            setUploadedFile(null);
+            setCroppedFile(null);
+          }}
+        >
           Cancel
         </Button>
         <Button
@@ -214,6 +329,53 @@ const UploadPage: React.FC = () => {
           Save
         </Button>
       </div>
+      <Dialog open={showImageCropPopup} onOpenChange={setShowImageCropPopup}>
+        <DialogContent className="[&>button>svg]:text-black">
+          <DialogHeader>
+            <DialogTitle className="text-black mb-2">
+              Crop Your Image
+            </DialogTitle>
+          </DialogHeader>
+          {uploadedFile && (
+            <ReactCrop
+              crop={crop}
+              onChange={(c) => setCrop(c)}
+              aspect={16 / 9}
+              minWidth={200}
+              ruleOfThirds
+            >
+              <img
+                src={imgSrc}
+                onLoad={onCroppingImageLoad}
+                ref={imgRef}
+                alt="Crop preview"
+                style={{ objectFit: "contain" }}
+              />
+            </ReactCrop>
+          )}
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button
+                className="text-black"
+                onClick={() => {
+                  setShowImageCropPopup(false);
+                  setCroppedFile(null);
+                  setUploadedFile(null);
+                }}
+                variant="outline"
+              >
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button
+              className="text-white bg-[#4b5085] hover:bg-[#35385e]"
+              onClick={handleCropImage}
+            >
+              Crop Image
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

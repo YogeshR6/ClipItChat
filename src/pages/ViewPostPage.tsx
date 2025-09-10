@@ -329,7 +329,7 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
                       type="submit"
                       variant="outline"
                       onClick={handleAddComment}
-                      className="text-white bg-[#4b5085] hover:bg-[#35385e] border-[#4b5085]"
+                      className="text-white bg-[#4b5085] hover:bg-[#35385e] border-[#4b5085] hover:text-white"
                       size="icon"
                     >
                       <IoMdSend />
