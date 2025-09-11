@@ -302,33 +302,31 @@ const AuthPage: React.FC = () => {
               className="text-red-500 text-wrap"
               style={{ visibility: error ? "visible" : "hidden" }}
             >
-              {error}
+              {error || "Something went wrong!"}
             </p>
-            <div className="flex gap-5 w-full justify-center items-center">
-              {formType === "signup" ? (
-                <Button
-                  type="submit"
-                  className="w-full bg-[#4b5085] hover:bg-[#35385e]"
-                >
-                  {authLoading ? (
-                    <AiOutlineLoading3Quarters className="animate-spin" />
-                  ) : (
-                    "Sign up"
-                  )}
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  className="w-full bg-[#4b5085] hover:bg-[#35385e]"
-                >
-                  {authLoading ? (
-                    <AiOutlineLoading3Quarters className="animate-spin" />
-                  ) : (
-                    "Login"
-                  )}
-                </Button>
-              )}
-            </div>
+            {formType === "signup" ? (
+              <Button
+                type="submit"
+                className="w-full bg-[#4b5085] hover:bg-[#35385e]"
+              >
+                {authLoading ? (
+                  <AiOutlineLoading3Quarters className="animate-spin" />
+                ) : (
+                  "Sign up"
+                )}
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                className="w-full bg-[#4b5085] hover:bg-[#35385e]"
+              >
+                {authLoading ? (
+                  <AiOutlineLoading3Quarters className="animate-spin" />
+                ) : (
+                  "Login"
+                )}
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"
@@ -460,7 +458,7 @@ const AuthPage: React.FC = () => {
               className="text-red-500 text-wrap"
               style={{ visibility: error ? "visible" : "hidden" }}
             >
-              {error}
+              {error || "Something went wrong!"}
             </p>
           </div>
           <DialogFooter>

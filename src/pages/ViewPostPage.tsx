@@ -161,6 +161,20 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
     }
     if (newComment.trim() === "" || !postData || !user) return;
 
+    if (!user.username || user.username === "") {
+      toast.error("Please complete your profile to comment.", {
+        duration: 4000,
+        closeButton: true,
+        action: {
+          label: "Go to My Profile",
+          onClick: () => {
+            router.push("/my-profile");
+          },
+        },
+      });
+      return;
+    }
+
     const addUserCommentResponse = await addUserCommentOnPost(
       postData,
       {

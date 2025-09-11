@@ -2,7 +2,7 @@ import { GameCategoryType } from "@/types/misc";
 import { Timestamp } from "firebase/firestore";
 
 export type PostType = {
-  createdAt: string;
+  createdAt: Timestamp;
   user: {
     id: string;
     username?: string;

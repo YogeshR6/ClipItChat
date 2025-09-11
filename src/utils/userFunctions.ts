@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { UserType } from "@/types/user";
+import { deleteImageStoredInCloudinary } from "@/utils/cloudinaryFunctions";
 
 export const handleUserSignUpAddToCollection = async (
   email: string,
@@ -125,5 +126,27 @@ export const removePostFromUserLikedPosts = async (
     });
   } catch (error) {
     return error;
+  }
+};
+
+export const removeUserProfilePic = async (userObj: UserType) => {
+  try {
+    deleteImageStoredInCloudinary(
+      userObj.cloudinaryProfilePhotoPublicId || "",
+      "profile_photos"
+    );
+    const userRef = doc(db, "users", userObj.uid);
+    const imageStorageUsedValue = userObj.cloudinaryProfilePhotoSize
+      ? -userObj.cloudinaryProfilePhotoSize
+      : 0;
+    await updateDoc(userRef, {
+      cloudinaryProfilePhotoPublicId: "",
+      cloudinaryProfilePhotoSize: 0,
+      photoUrl: "",
+      imageStorageUsed: increment(imageStorageUsedValue),
+    });
+  } catch (error) {
+    console.error("Error removing user profile photo", error);
+    return error as Error;
   }
 };

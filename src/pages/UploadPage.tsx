@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/contexts/AuthContext";
-import { GameCategoryType, UploadPageErrorType } from "@/types/misc";
+import { GameCategoryType } from "@/types/misc";
 import { uploadUserPostImageToCloudinaryAndSaveInfoInFirestore } from "@/utils/cloudinaryFunctions";
 import { getGameCategoriesList } from "@/utils/gameCategoryFunctions";
 import Image from "next/image";
@@ -54,7 +54,6 @@ const UploadPage: React.FC = () => {
   const [selectedGame, setSelectedGame] = useState<GameCategoryType | null>(
     null
   );
-  const [error, setError] = useState<UploadPageErrorType>(null);
   const [crop, setCrop] = useState<Crop>();
   const [showImageCropPopup, setShowImageCropPopup] = useState<boolean>(false);
   const [croppedFile, setCroppedFile] = useState<File | null>(null);
@@ -133,22 +132,38 @@ const UploadPage: React.FC = () => {
   const handleFileUpload = (file: File[]) => {
     setUploadedFile(file[0]);
     setShowImageCropPopup(true);
-    setError(null);
   };
 
   const handleUserNewPostUpload = async () => {
     if (!croppedFile || !selectedGame || uploadPostLoading) {
-      return setError({
-        missingFile: !croppedFile,
-        missingGame: !selectedGame,
-      });
+      toast.error(
+        "Please ensure you have uploaded an image and have selected a category.",
+        {
+          duration: 4000,
+          closeButton: true,
+        }
+      );
+      return;
     }
     if ((user.imageStorageUsed || 0) + croppedFile.size / 1048576 > 100) {
-      return setError({
-        missingFile: !croppedFile,
-        missingGame: !selectedGame,
-        storageLimit: true,
+      toast.error("You have reached your image storage limit.", {
+        duration: 4000,
+        closeButton: true,
       });
+      return;
+    }
+    if (!user.username || user.username === "") {
+      toast.error("Please complete your profile to upload.", {
+        duration: 4000,
+        closeButton: true,
+        action: {
+          label: "Go to My Profile",
+          onClick: () => {
+            router.push("/my-profile");
+          },
+        },
+      });
+      return;
     }
     if (user) {
       setUploadPostLoading(true);
@@ -165,10 +180,9 @@ const UploadPage: React.FC = () => {
         setUploadPostLoading(false);
         router.push(`/posts/${newPostId}`);
       } else {
-        setError({
-          missingFile: false,
-          missingGame: false,
-          customMessage: "Something went wrong. Please try again later!",
+        toast.error("Something went wrong. Please try again later!", {
+          duration: 4000,
+          closeButton: true,
         });
       }
     }
@@ -261,7 +275,6 @@ const UploadPage: React.FC = () => {
     if (!uploadPostLoading) {
       setUploadedFile(null);
       setCroppedFile(null);
-      setError(null);
     }
   };
 
@@ -306,7 +319,6 @@ const UploadPage: React.FC = () => {
             value={selectedGame?.guid || ""}
             onValueChange={(value) => {
               const game = gameCategoryList.find((g) => g.guid === value);
-              setError(null);
               setSelectedGame(game || null);
             }}
             onOpenChange={(open) => {
@@ -316,12 +328,7 @@ const UploadPage: React.FC = () => {
               }
             }}
           >
-            <SelectTrigger
-              className={`w-[180px] ${
-                error?.missingGame ? "border-red-500 border-2" : ""
-              }`}
-              disabled={uploadPostLoading}
-            >
+            <SelectTrigger className="w-[180px]" disabled={uploadPostLoading}>
               <SelectValue placeholder="Select a game">
                 {selectedGame?.name}
               </SelectValue>
@@ -362,19 +369,6 @@ const UploadPage: React.FC = () => {
             </SelectContent>
           </Select>
         </div>
-        {error && (
-          <p className="text-red-500">
-            Please upload a file and select a game.
-          </p>
-        )}
-        {error?.storageLimit && (
-          <p className="text-red-500">
-            You have reached your image storage limit.
-          </p>
-        )}
-        {error?.customMessage && (
-          <p className="text-red-500">{error.customMessage}</p>
-        )}
         <div className="flex flex-row gap-5">
           <Button
             type="button"

@@ -21,3 +21,8 @@ export type Tab = {
 };
 
 export type AuthFormType = "login" | "signup";
+
+export type MyProfileSegmentTabsType =
+  | "my-profile"
+  | "my-post"
+  | "my-liked-post";
