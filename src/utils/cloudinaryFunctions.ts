@@ -60,7 +60,7 @@ export const uploadUserPostImageToCloudinaryAndSaveInfoInFirestore = async (
     username?: string;
   },
   selectedGame: GameCategoryType
-) => {
+): Promise<string | Error> => {
   const user = auth.currentUser;
   if (!user) throw new Error("User not authenticated");
   try {
@@ -99,8 +99,10 @@ export const uploadUserPostImageToCloudinaryAndSaveInfoInFirestore = async (
       );
       return newPostId;
     }
+    return new Error("Something went wrong!");
   } catch (error) {
     console.error("Upload failed:", error);
+    return error as Error;
   }
 };
 

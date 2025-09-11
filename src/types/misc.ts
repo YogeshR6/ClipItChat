@@ -12,6 +12,7 @@ export type UploadPageErrorType = {
   missingFile: boolean;
   missingGame: boolean;
   storageLimit?: boolean;
+  customMessage?: string;
 } | null;
 
 export type Tab = {

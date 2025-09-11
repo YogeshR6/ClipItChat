@@ -33,8 +33,10 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import ReactCrop, { centerCrop, Crop, makeAspectCrop } from "react-image-crop";
 import { toast } from "sonner";
+import { IoClose } from "react-icons/io5";
 
 const UploadPage: React.FC = () => {
   const { user, isLoggedIn } = useAuth();
@@ -56,6 +58,7 @@ const UploadPage: React.FC = () => {
   const [crop, setCrop] = useState<Crop>();
   const [showImageCropPopup, setShowImageCropPopup] = useState<boolean>(false);
   const [croppedFile, setCroppedFile] = useState<File | null>(null);
+  const [uploadPostLoading, setUploadPostLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (isLoggedIn === false && !hasRedirected.current) {
@@ -85,6 +88,14 @@ const UploadPage: React.FC = () => {
     }
   }, [uploadedFile]);
 
+  const croppedImgSrc = useMemo(() => {
+    if (croppedFile) {
+      return URL.createObjectURL(croppedFile);
+    } else {
+      return "";
+    }
+  }, [croppedFile]);
+
   useEffect(() => {
     // This is the cleanup function that will run when the component unmounts
     return () => {
@@ -93,6 +104,15 @@ const UploadPage: React.FC = () => {
       }
     };
   }, [imgSrc]);
+
+  useEffect(() => {
+    // This is the cleanup function that will run when the component unmounts
+    return () => {
+      if (croppedImgSrc) {
+        URL.revokeObjectURL(croppedImgSrc);
+      }
+    };
+  }, [croppedImgSrc]);
 
   const fetchGameCategories = async () => {
     if (gameSearchInput.length > 2) {
@@ -117,7 +137,7 @@ const UploadPage: React.FC = () => {
   };
 
   const handleUserNewPostUpload = async () => {
-    if (!croppedFile || !selectedGame) {
+    if (!croppedFile || !selectedGame || uploadPostLoading) {
       return setError({
         missingFile: !croppedFile,
         missingGame: !selectedGame,
@@ -131,6 +151,7 @@ const UploadPage: React.FC = () => {
       });
     }
     if (user) {
+      setUploadPostLoading(true);
       const newPostId =
         await uploadUserPostImageToCloudinaryAndSaveInfoInFirestore(
           croppedFile,
@@ -140,15 +161,24 @@ const UploadPage: React.FC = () => {
           },
           selectedGame
         );
-      router.push(`/posts/${newPostId}`);
+      if (!(newPostId instanceof Error)) {
+        setUploadPostLoading(false);
+        router.push(`/posts/${newPostId}`);
+      } else {
+        setError({
+          missingFile: false,
+          missingGame: false,
+          customMessage: "Something went wrong. Please try again later!",
+        });
+      }
     }
   };
 
   const onCroppingImageLoad = (e: SyntheticEvent<HTMLImageElement>) => {
-    console.log("here");
-    const { naturalWidth: width, naturalHeight: height } = e.currentTarget;
+    const imageElement = e.currentTarget;
+    const { width, height } = imageElement;
 
-    const crop = centerCrop(
+    const cropPercent = centerCrop(
       makeAspectCrop(
         {
           unit: "%",
@@ -162,7 +192,15 @@ const UploadPage: React.FC = () => {
       height
     );
 
-    setCrop(crop);
+    const cropPixels: Crop = {
+      unit: "px",
+      x: (cropPercent.x / 100) * width,
+      y: (cropPercent.y / 100) * height,
+      width: (cropPercent.width / 100) * width,
+      height: (cropPercent.height / 100) * height,
+    };
+
+    setCrop(cropPixels);
   };
 
   const handleCropImage = async () => {
@@ -219,6 +257,14 @@ const UploadPage: React.FC = () => {
     );
   };
 
+  const handleRemoveImageClick = () => {
+    if (!uploadPostLoading) {
+      setUploadedFile(null);
+      setCroppedFile(null);
+      setError(null);
+    }
+  };
+
   if (isLoggedIn === false) {
     return <></>;
   }
@@ -228,109 +274,155 @@ const UploadPage: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col w-full justify-start items-center gap-5">
-      <div className="w-full border-2">
+    <div className="flex flex-col w-full justify-start items-center px-5 mb-10">
+      <div className="border-2 p-3 flex flex-col w-[35%] justify-start items-center gap-5 rounded-xl bg-white">
         {!uploadedFile ? (
-          <div className="w-[30%]">
+          <div className="w-full border-2 border-black rounded-2xl">
             <FileUpload onChange={handleFileUpload} />
           </div>
         ) : (
           croppedFile && (
-            <Image
-              src={URL.createObjectURL(croppedFile)}
-              alt="Uploaded"
-              width={200}
-              height={200}
-            />
+            <div className="relative p-2">
+              <Image
+                src={croppedImgSrc}
+                alt="Uploaded"
+                width={500}
+                height={500}
+              />
+              <IoClose
+                className="absolute bg-gray-500 text-white p-1 rounded-full top-0 right-0"
+                size="26"
+                style={{
+                  cursor: uploadPostLoading ? "not-allowed" : "pointer",
+                }}
+                onClick={handleRemoveImageClick}
+              />
+            </div>
           )
         )}
-      </div>
-      <div className="flex flex-row gap-5 justify-center items-center">
-        <p>Select Category</p>
-        <Select
-          value={selectedGame?.guid || ""}
-          onValueChange={(value) => {
-            const game = gameCategoryList.find((g) => g.guid === value);
-            setError(null);
-            setSelectedGame(game || null);
-          }}
-          onOpenChange={(open) => {
-            if (open) {
-              setGameSearchInput("");
-              setGameCategoryList(selectedGame ? [selectedGame] : []);
-            }
-          }}
-        >
-          <SelectTrigger
-            className={`w-[180px] ${
-              error?.missingGame ? "border-red-500 border-2" : ""
-            }`}
+        <div className="flex flex-row gap-5 justify-center items-center text-black">
+          <p className="font-bold">Select Category:</p>
+          <Select
+            value={selectedGame?.guid || ""}
+            onValueChange={(value) => {
+              const game = gameCategoryList.find((g) => g.guid === value);
+              setError(null);
+              setSelectedGame(game || null);
+            }}
+            onOpenChange={(open) => {
+              if (open) {
+                setGameSearchInput("");
+                setGameCategoryList(selectedGame ? [selectedGame] : []);
+              }
+            }}
           >
-            <SelectValue placeholder="Select a game">
-              {selectedGame?.name}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>
-                <Input
-                  placeholder="Search categories..."
-                  value={gameSearchInput}
-                  onChange={(e) => setGameSearchInput(e.target.value)}
-                  autoFocus
-                  ref={gameSearchRef}
-                />
-              </SelectLabel>
-              <SelectLabel>Results</SelectLabel>
-              {gameSearchLoading ? (
-                <p>Loading...</p>
-              ) : (
-                gameCategoryList.map((category) => (
-                  <SelectItem value={category.guid} key={category.guid}>
-                    <div className="flex flex-row gap-3 items-center justify-center">
-                      <Image
-                        src={category.image["medium_url"]}
-                        alt={category.name}
-                        width={40}
-                        height={40}
-                      />
-                      <h3>{category.name}</h3>
-                    </div>
-                  </SelectItem>
-                ))
-              )}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
-      {error && (
-        <p className="text-red-500">Please upload a file and select a game.</p>
-      )}
-      {error?.storageLimit && (
-        <p className="text-red-500">
-          You have reached your image storage limit.
-        </p>
-      )}
-      <div className="flex flex-row gap-5">
-        <Button
-          type="button"
-          onClick={() => {
-            setUploadedFile(null);
-            setCroppedFile(null);
-          }}
-        >
-          Cancel
-        </Button>
-        <Button
-          onClick={handleUserNewPostUpload}
-          variant="outline"
-          type="submit"
-        >
-          Save
-        </Button>
+            <SelectTrigger
+              className={`w-[180px] ${
+                error?.missingGame ? "border-red-500 border-2" : ""
+              }`}
+              disabled={uploadPostLoading}
+            >
+              <SelectValue placeholder="Select a game">
+                {selectedGame?.name}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>
+                  <Input
+                    placeholder="Search categories..."
+                    value={gameSearchInput}
+                    onChange={(e) => setGameSearchInput(e.target.value)}
+                    autoFocus
+                    ref={gameSearchRef}
+                  />
+                </SelectLabel>
+                <SelectLabel>Results</SelectLabel>
+                {gameSearchLoading ? (
+                  <div className="flex flex-row w-full items-center justify-start gap-2 pl-2">
+                    <AiOutlineLoading3Quarters className="animate-spin" />
+                    <p>Loading...</p>
+                  </div>
+                ) : (
+                  gameCategoryList.map((category) => (
+                    <SelectItem value={category.guid} key={category.guid}>
+                      <div className="flex flex-row gap-3 items-center justify-center">
+                        <Image
+                          src={category.image["medium_url"]}
+                          alt={category.name}
+                          width={40}
+                          height={40}
+                        />
+                        <h3>{category.name}</h3>
+                      </div>
+                    </SelectItem>
+                  ))
+                )}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+        {error && (
+          <p className="text-red-500">
+            Please upload a file and select a game.
+          </p>
+        )}
+        {error?.storageLimit && (
+          <p className="text-red-500">
+            You have reached your image storage limit.
+          </p>
+        )}
+        {error?.customMessage && (
+          <p className="text-red-500">{error.customMessage}</p>
+        )}
+        <div className="flex flex-row gap-5">
+          <Button
+            type="button"
+            onClick={() => {
+              setUploadedFile(null);
+              setCroppedFile(null);
+            }}
+            variant="outline"
+            className="text-black"
+            disabled={uploadPostLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleUserNewPostUpload}
+            variant="outline"
+            type="submit"
+            className="bg-[#4b5085] hover:bg-[#35385e] hover:text-white"
+            style={{
+              cursor: uploadPostLoading ? "not-allowed" : "pointer",
+            }}
+          >
+            {uploadPostLoading ? (
+              <div className="flex flex-row w-full items-center justify-start gap-2">
+                <AiOutlineLoading3Quarters className="animate-spin" />
+                <p>Saving...</p>
+              </div>
+            ) : (
+              "Save"
+            )}
+          </Button>
+        </div>
       </div>
       <Dialog open={showImageCropPopup} onOpenChange={setShowImageCropPopup}>
-        <DialogContent className="[&>button>svg]:text-black">
+        <DialogContent
+          className="[&>button>svg]:text-black"
+          onPointerDownOutside={(event) => {
+            setShowImageCropPopup(false);
+            setCroppedFile(null);
+            setUploadedFile(null);
+          }}
+          onEscapeKeyDown={(event) => {
+            setShowImageCropPopup(false);
+            setCroppedFile(null);
+            setUploadedFile(null);
+          }}
+          showCloseButton={false}
+        >
           <DialogHeader>
             <DialogTitle className="text-black mb-2">
               Crop Your Image

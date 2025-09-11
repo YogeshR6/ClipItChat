@@ -77,13 +77,13 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
       const deletePostResponse = await deletePostById(postData);
       if (!(deletePostResponse instanceof Error)) {
         setDeletePostStatus("deleted");
-        router.prefetch("/");
+        router.prefetch("/posts");
         toast.success("Post deleted successfully!", {
           duration: 1500,
           closeButton: true,
         });
         setTimeout(() => {
-          router.push("/");
+          router.push("/posts");
           setDeletePostStatus("idle");
         }, 500);
       }
