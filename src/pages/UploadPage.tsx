@@ -73,6 +73,7 @@ const UploadPage: React.FC = () => {
 
   useEffect(() => {
     const timerId = setTimeout(() => {
+      gameSearchRef.current?.focus();
       fetchGameCategories();
     }, 500);
 
@@ -227,21 +228,40 @@ const UploadPage: React.FC = () => {
     const canvas = document.createElement("canvas");
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
-    canvas.width = crop.width * scaleX;
-    canvas.height = crop.height * scaleY;
+
+    let sx = crop.x * scaleX;
+    let sy = crop.y * scaleY;
+    let sWidth = crop.width * scaleX;
+    let sHeight = crop.height * scaleY;
+
+    if (sx + sWidth > image.naturalWidth) {
+      sWidth = image.naturalWidth - sx;
+    }
+    if (sy + sHeight > image.naturalHeight) {
+      sHeight = image.naturalHeight - sy;
+    }
+
+    const finalX = Math.floor(sx);
+    const finalY = Math.floor(sy);
+    const finalWidth = Math.floor(sWidth);
+    const finalHeight = Math.floor(sHeight);
+
+    canvas.width = finalWidth;
+    canvas.height = finalHeight;
+
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     ctx.drawImage(
       image,
-      crop.x * scaleX,
-      crop.y * scaleY,
-      crop.width * scaleX,
-      crop.height * scaleY,
+      finalX,
+      finalY,
+      finalWidth,
+      finalHeight,
       0,
       0,
-      canvas.width,
-      canvas.height
+      finalWidth,
+      finalHeight
     );
 
     canvas.toBlob(
@@ -260,10 +280,7 @@ const UploadPage: React.FC = () => {
           type: blob.type,
         });
 
-        // Set the new File object in state
         setCroppedFile(croppedFile);
-
-        // Close the popup
         setShowImageCropPopup(false);
       },
       "image/png",
