@@ -37,6 +37,11 @@ import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import ReactCrop, { centerCrop, Crop, makeAspectCrop } from "react-image-crop";
 import { toast } from "sonner";
 import { IoClose } from "react-icons/io5";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const UploadPage: React.FC = () => {
   const { user, isLoggedIn } = useAuth();
@@ -319,14 +324,21 @@ const UploadPage: React.FC = () => {
                 width={500}
                 height={500}
               />
-              <IoClose
-                className="absolute bg-gray-500 text-white p-1 rounded-full top-0 right-0"
-                size="26"
-                style={{
-                  cursor: uploadPostLoading ? "not-allowed" : "pointer",
-                }}
-                onClick={handleRemoveImageClick}
-              />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <IoClose
+                    className="absolute bg-gray-500 text-white p-1 rounded-full top-0 right-0"
+                    size="26"
+                    style={{
+                      cursor: uploadPostLoading ? "not-allowed" : "pointer",
+                    }}
+                    onClick={handleRemoveImageClick}
+                  />
+                </TooltipTrigger>
+                <TooltipContent className="border border-zinc-900">
+                  <p>Remove Image</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           )
         )}

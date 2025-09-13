@@ -61,6 +61,8 @@ const AuthPage: React.FC = () => {
   const [forgotPasswordEmailInput, setForgotPasswordEmailInput] =
     useState<string>("");
 
+  const lastUsedAuthMethod = localStorage.getItem("lastAuthMethod") || "";
+
   useEffect(() => {
     setError("");
   }, [formType]);
@@ -85,6 +87,7 @@ const AuthPage: React.FC = () => {
         formData.password
       );
       if (user) {
+        localStorage.setItem("lastAuthMethod", "password");
         router.replace("/");
       } else if (user === false) {
         setShowEmailNotVerifiedPopup(true);
@@ -110,7 +113,10 @@ const AuthPage: React.FC = () => {
   const handleUserSignUpWithGoogle = async () => {
     try {
       const userSignUpResponse = await userSignInWithGoogle();
-      if (userSignUpResponse) router.replace("/");
+      if (userSignUpResponse) {
+        localStorage.setItem("lastAuthMethod", "google");
+        router.replace("/");
+      }
     } catch (error: any) {
       handleAuthError(error);
     }
@@ -316,28 +322,42 @@ const AuthPage: React.FC = () => {
                 )}
               </Button>
             ) : (
-              <Button
-                type="submit"
-                className="w-full bg-[#4b5085] hover:bg-[#35385e]"
-              >
-                {authLoading ? (
-                  <AiOutlineLoading3Quarters className="animate-spin" />
-                ) : (
-                  "Login"
+              <div className="relative w-full">
+                <Button
+                  type="submit"
+                  className="w-full bg-[#4b5085] hover:bg-[#35385e]"
+                >
+                  {authLoading ? (
+                    <AiOutlineLoading3Quarters className="animate-spin" />
+                  ) : (
+                    "Login"
+                  )}
+                </Button>
+                {lastUsedAuthMethod === "password" && (
+                  <div className="absolute right-0 top-0 -translate-y-1/4 translate-x-1/4 transform rounded-full bg-white px-2 py-1 text-xs font-medium text-[#4b5085] border border-[#4b5085]">
+                    Last Used
+                  </div>
                 )}
-              </Button>
+              </div>
             )}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleUserSignUpWithGoogle}
-              className="text-black"
-            >
-              <FcGoogle />{" "}
-              {formType === "signup"
-                ? "Sign up with Google"
-                : "Login with Google"}
-            </Button>
+            <div className="relative w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleUserSignUpWithGoogle}
+                className="text-black w-full"
+              >
+                <FcGoogle />{" "}
+                {formType === "signup"
+                  ? "Sign up with Google"
+                  : "Login with Google"}
+              </Button>
+              {lastUsedAuthMethod === "google" && (
+                <div className="absolute right-0 top-0 -translate-y-1/4 translate-x-1/4 transform rounded-full bg-[#4b5085] px-2 py-1 text-xs font-medium text-white border border-white">
+                  Last Used
+                </div>
+              )}
+            </div>
           </form>
         </div>
       </div>

@@ -25,6 +25,12 @@ import { IoClose } from "react-icons/io5";
 import { Button } from "@/components/ui/button";
 import { DocumentData, QueryDocumentSnapshot } from "firebase/firestore";
 import { toast } from "sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 function PostsListPage() {
   const router = useRouter();
@@ -214,7 +220,10 @@ function PostsListPage() {
           <DropdownMenuLabel>Filter Games</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {gameSearchLoading ? (
-            <p>Loading..</p>
+            <div className="flex flex-row w-full items-center justify-start gap-2 pl-2">
+              <AiOutlineLoading3Quarters className="animate-spin" />
+              <p>Loading...</p>
+            </div>
           ) : (
             gameCategoryList.map((game) => (
               <DropdownMenuCheckboxItem
@@ -257,15 +266,22 @@ function PostsListPage() {
               className="border rounded-full p-2 flex flex-row gap-2 items-center justify-center"
             >
               {game.name}
-              <IoClose
-                className="cursor-pointer hover:bg-[#000000] rounded-full"
-                size="20"
-                onClick={() => {
-                  setSelectedGames((prev) =>
-                    prev ? prev.filter((g) => g.guid !== game.guid) : null
-                  );
-                }}
-              />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <IoClose
+                    className="cursor-pointer hover:bg-[#000000] rounded-full"
+                    size="20"
+                    onClick={() => {
+                      setSelectedGames((prev) =>
+                        prev ? prev.filter((g) => g.guid !== game.guid) : null
+                      );
+                    }}
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Remove Filter</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           ))}
       </div>

@@ -10,6 +10,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/contexts/AuthContext";
 import { formatTimeAgo } from "@/lib/utils";
 import { CommentType, PostType } from "@/types/post";
@@ -293,31 +298,49 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
               <div className="flex flex-row w-full justify-between items-start">
                 <div className="flex-1 flex flex-col items-start justify-start gap-4">
                   <div className="flex flex-row gap-2 items-center justify-center border-2 border-white rounded-xl py-1 px-2">
-                    <div
-                      onClick={handleUserLikePost}
-                      className="text-white bg-transparent cursor-pointer flex flex-row items-center justify-center text-3xl gap-1 hover:bg-[#4b5085] px-2 rounded-xl"
-                    >
-                      {user.likedPosts?.includes(postId) ? (
-                        <FaHeart className="text-red-600" size="28" />
-                      ) : (
-                        <FaRegHeart className="text-white" size="28" />
-                      )}
-                      {postData.likes}
-                    </div>
-                    <div
-                      onClick={handleUserClickCommentIcon}
-                      className="text-white bg-transparent cursor-pointer flex flex-row items-center justify-center text-3xl gap-1 hover:bg-[#4b5085] px-2 rounded-xl"
-                    >
-                      {!postData.comments?.length ||
-                      postData.comments?.length === 0 ? (
-                        <FaRegComment className="text-white" size="28" />
-                      ) : postData.comments?.length === 1 ? (
-                        <FaComment className="text-white" size="28" />
-                      ) : (
-                        <FaComments className="text-white" size="28" />
-                      )}
-                      {postData.comments?.length || 0}
-                    </div>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          onClick={handleUserLikePost}
+                          className="text-white bg-transparent cursor-pointer flex flex-row items-center justify-center text-3xl gap-1 hover:bg-[#4b5085] px-2 rounded-xl"
+                        >
+                          {user.likedPosts?.includes(postId) ? (
+                            <FaHeart className="text-red-600" size="28" />
+                          ) : (
+                            <FaRegHeart className="text-white" size="28" />
+                          )}
+                          {postData.likes}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent sideOffset={8}>
+                        <p>
+                          {user.likedPosts?.includes(postId)
+                            ? "Unlike"
+                            : "Like"}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          onClick={handleUserClickCommentIcon}
+                          className="text-white bg-transparent cursor-pointer flex flex-row items-center justify-center text-3xl gap-1 hover:bg-[#4b5085] px-2 rounded-xl"
+                        >
+                          {!postData.comments?.length ||
+                          postData.comments?.length === 0 ? (
+                            <FaRegComment className="text-white" size="28" />
+                          ) : postData.comments?.length === 1 ? (
+                            <FaComment className="text-white" size="28" />
+                          ) : (
+                            <FaComments className="text-white" size="28" />
+                          )}
+                          {postData.comments?.length || 0}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent sideOffset={8}>
+                        <p>Comments</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                   {user.uid === postData.user.id && (
                     <Button
@@ -339,15 +362,22 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
                       ref={commentInputRef}
                       className="placeholder:text-white border-2"
                     />
-                    <Button
-                      type="submit"
-                      variant="outline"
-                      onClick={handleAddComment}
-                      className="text-white bg-[#4b5085] hover:bg-[#35385e] border-[#4b5085] hover:text-white"
-                      size="icon"
-                    >
-                      <IoMdSend />
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="submit"
+                          variant="outline"
+                          onClick={handleAddComment}
+                          className="text-white bg-[#4b5085] hover:bg-[#35385e] border-[#4b5085] hover:text-white"
+                          size="icon"
+                        >
+                          <IoMdSend />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent sideOffset={4}>
+                        <p>Comment</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                   <div className="flex flex-col items-start justify-start gap-3 w-full">
                     {postData?.comments?.map((comment) => (
@@ -356,18 +386,25 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
                           <p className="font-semibold text-xl flex flex-row items-center justify-between w-full">
                             {comment.user.username || "Anonymous"}
                             {user.uid === comment.user.id && (
-                              <Button
-                                variant="destructive"
-                                size="icon"
-                                onClick={() =>
-                                  setShowDeleteCommentConfirmationPopup({
-                                    popupOpen: true,
-                                    commentToBeDeleted: comment,
-                                  })
-                                }
-                              >
-                                <MdDelete />
-                              </Button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="destructive"
+                                    size="icon"
+                                    onClick={() =>
+                                      setShowDeleteCommentConfirmationPopup({
+                                        popupOpen: true,
+                                        commentToBeDeleted: comment,
+                                      })
+                                    }
+                                  >
+                                    <MdDelete />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent sideOffset={4}>
+                                  <p>Delete Comment</p>
+                                </TooltipContent>
+                              </Tooltip>
                             )}
                           </p>
                           <p className="text-lg flex flex-row items-center justify-between w-full">
@@ -383,26 +420,44 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
                   </div>
                 </div>
                 <div className="flex flex-row items-center justify-center gap-1 border-2 border-white rounded-xl py-1 px-2">
-                  <Image
-                    src={postData.selectedGame.image["medium_url"]}
-                    width={70}
-                    height={70}
-                    alt={postData.selectedGame.name}
-                    className="cursor-pointer"
-                    onClick={() =>
-                      copyGameCategoryToClipBoard(postData.selectedGame.name)
-                    }
-                  />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Image
+                        src={postData.selectedGame.image["medium_url"]}
+                        width={70}
+                        height={70}
+                        alt={postData.selectedGame.name}
+                        className="cursor-pointer"
+                        onClick={() =>
+                          copyGameCategoryToClipBoard(
+                            postData.selectedGame.name
+                          )
+                        }
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent sideOffset={8}>
+                      <p>Copy Game Name</p>
+                    </TooltipContent>
+                  </Tooltip>
                   <div className="flex flex-col items-start justify-between gap-1 pl-2">
                     <p className="text-2xl">Category:</p>
-                    <p
-                      className="text-2xl cursor-pointer"
-                      onClick={() =>
-                        copyGameCategoryToClipBoard(postData.selectedGame.name)
-                      }
-                    >
-                      {postData.selectedGame.name}
-                    </p>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <p
+                          className="text-2xl cursor-pointer"
+                          onClick={() =>
+                            copyGameCategoryToClipBoard(
+                              postData.selectedGame.name
+                            )
+                          }
+                        >
+                          {postData.selectedGame.name}
+                        </p>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Copy Game Name</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                 </div>
               </div>

@@ -48,6 +48,11 @@ import {
   FaRegComment,
   FaRegHeart,
 } from "react-icons/fa";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const MyProfileSegmentControlTabs = [
   { title: "Edit Profile", value: "my-profile" },
@@ -384,14 +389,23 @@ function MyProfilePage() {
                   disabled={uploadUserDataLoading}
                 />
                 {croppedImgSrc && (
-                  <IoClose
-                    className="absolute bg-gray-500 text-white p-1 rounded-full top-0 right-0"
-                    size="26"
-                    style={{
-                      cursor: uploadUserDataLoading ? "not-allowed" : "pointer",
-                    }}
-                    onClick={handleRemoveImageClick}
-                  />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <IoClose
+                        className="absolute bg-gray-500 text-white p-1 rounded-full top-0 right-0"
+                        size="26"
+                        style={{
+                          cursor: uploadUserDataLoading
+                            ? "not-allowed"
+                            : "pointer",
+                        }}
+                        onClick={handleRemoveImageClick}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent className="border border-zinc-900">
+                      <p>Remove Image</p>
+                    </TooltipContent>
+                  </Tooltip>
                 )}
               </label>
               <div className="flex flex-col items-center justify-between gap-5 w-full">

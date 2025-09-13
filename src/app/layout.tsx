@@ -3,8 +3,8 @@ import "./globals.css";
 import TopBar from "@/components/TopBar";
 import { AuthProvider } from "@/hooks/contexts/AuthContext";
 import { Toaster } from "sonner";
-import ReactCrop from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export const metadata: Metadata = {
   title: "Clip It Chat",
@@ -28,9 +28,11 @@ export default function RootLayout({
         }}
       >
         <AuthProvider>
-          <TopBar />
-          {children}
-          <Toaster />
+          <TooltipProvider>
+            <TopBar />
+            {children}
+            <Toaster />
+          </TooltipProvider>
         </AuthProvider>
       </body>
     </html>
