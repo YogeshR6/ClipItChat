@@ -163,6 +163,13 @@ function MyProfilePage() {
 
   const handleUpdateUserData = async () => {
     if (!user || uploadUserDataLoading) return;
+    if (!updatedUserDetails.username || updatedUserDetails.username === "") {
+      toast.error("Username can't be empty!", {
+        duration: 4000,
+        closeButton: true,
+      });
+      return;
+    }
     setUploadUserDataLoading(true);
     let finalUpdates: Partial<UserType> = { ...updatedUserDetails };
 
@@ -211,9 +218,9 @@ function MyProfilePage() {
   const handleEditClick = () => {
     setIsUserEditingDetails(true);
     setUpdatedUserDetails({
-      username: user.username,
-      fName: user.fName,
-      lName: user.lName,
+      username: user.username || "",
+      fName: user.fName || "",
+      lName: user.lName || "",
     });
   };
 
@@ -509,6 +516,7 @@ function MyProfilePage() {
                       alt={`Post image ${post.postUid}`}
                       width={235}
                       height={235}
+                      priority
                     />
                     <div className="flex flex-col items-start justify-center gap-1 w-full text-black">
                       <p>Category: {post.selectedGame.name}</p>
@@ -564,6 +572,7 @@ function MyProfilePage() {
                       alt={`Post image ${post.postUid}`}
                       width={235}
                       height={235}
+                      priority
                     />
                     <div className="flex flex-col items-start justify-center gap-1 w-full text-black">
                       <p>Category: {post.selectedGame.name}</p>
