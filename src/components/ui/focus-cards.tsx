@@ -40,6 +40,7 @@ export const Card = React.memo(
         alt={card.user.id}
         fill
         className="object-cover absolute inset-0"
+        loading="lazy"
       />
       <div
         className={cn(

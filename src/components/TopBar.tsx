@@ -65,6 +65,7 @@ const TopBar: React.FC = () => {
         width={130}
         height={50}
         onClick={() => router.push("/")}
+        priority
       />
       <div className="flex flex-row gap-5">
         <Tabs tabs={tabs} activeTab={active} setActiveTab={setActive} />

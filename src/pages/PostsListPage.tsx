@@ -4,6 +4,8 @@ import { PostType } from "@/types/post";
 import {
   getFirstPagePostsListResultUsingLimit,
   getFirstPagePostsListResultUsingLimitAndGameFilter,
+  getNextPagePostsListResultUsingLimit,
+  getNextPagePostsListResultUsingLimitAndGameFilter,
 } from "@/utils/postFunctions";
 import { useRouter } from "next/navigation";
 import {
@@ -21,6 +23,8 @@ import { getGameCategoriesList } from "@/utils/gameCategoryFunctions";
 import Image from "next/image";
 import { IoClose } from "react-icons/io5";
 import { Button } from "@/components/ui/button";
+import { DocumentData, QueryDocumentSnapshot } from "firebase/firestore";
+import { toast } from "sonner";
 
 function PostsListPage() {
   const router = useRouter();
@@ -35,6 +39,8 @@ function PostsListPage() {
   const [gameCategoryList, setGameCategoryList] = useState<GameCategoryType[]>(
     []
   );
+  const [lastVisiblePost, setLastVisiblePost] =
+    useState<QueryDocumentSnapshot<DocumentData> | null>(null);
 
   useEffect(() => {
     if (selectedGames && selectedGames.length > 0) {
@@ -77,15 +83,104 @@ function PostsListPage() {
         10,
         gameFilterList || []
       );
-    if (!(firstPageResultsWithFilter instanceof Error)) {
-      setPostsList(firstPageResultsWithFilter);
+    if (firstPageResultsWithFilter instanceof Error) {
+      toast.error("Something went wrong. Please try again!", {
+        duration: 4000,
+        closeButton: true,
+      });
+    } else if (
+      firstPageResultsWithFilter.lastVisible &&
+      firstPageResultsWithFilter.postListToReturn.length > 0
+    ) {
+      setPostsList(firstPageResultsWithFilter.postListToReturn);
+      setLastVisiblePost(firstPageResultsWithFilter.lastVisible);
+    } else {
+      toast.error(
+        "No posts match this filter. Try removing a filter to see more results!",
+        {
+          duration: 4000,
+          closeButton: true,
+        }
+      );
     }
   };
 
   const getFirstPagePostsList = async () => {
     const firstPageResults = await getFirstPagePostsListResultUsingLimit(10);
-    if (!(firstPageResults instanceof Error)) {
-      setPostsList(firstPageResults);
+    if (firstPageResults instanceof Error) {
+      toast.error("Something went wrong. Please try again!", {
+        duration: 4000,
+        closeButton: true,
+      });
+    } else if (
+      firstPageResults.lastVisible &&
+      firstPageResults.postListToReturn.length > 0
+    ) {
+      setPostsList(firstPageResults.postListToReturn);
+      setLastVisiblePost(firstPageResults.lastVisible);
+    } else {
+      toast.error("That's all for now. Check back later for new posts!", {
+        duration: 4000,
+        closeButton: true,
+      });
+    }
+  };
+
+  const handleLoadMoreClick = async () => {
+    if (!lastVisiblePost) return;
+    if (selectedGames && selectedGames.length > 0) {
+      const gameFilterList = selectedGames?.map((game) => game.guid);
+      const newPostListWithFilterResponse =
+        await getNextPagePostsListResultUsingLimitAndGameFilter(
+          10,
+          gameFilterList || [],
+          lastVisiblePost
+        );
+      if (newPostListWithFilterResponse instanceof Error) {
+        toast.error("Something went wrong. Please try again!", {
+          duration: 4000,
+          closeButton: true,
+        });
+      } else if (
+        newPostListWithFilterResponse.newLastVisible &&
+        newPostListWithFilterResponse.newPostListToReturn.length > 0
+      ) {
+        setPostsList((prev) => [
+          ...(prev ?? []),
+          ...newPostListWithFilterResponse.newPostListToReturn,
+        ]);
+        setLastVisiblePost(newPostListWithFilterResponse.newLastVisible);
+      } else {
+        toast.error("That's all for now. Check back later for new posts!", {
+          duration: 4000,
+          closeButton: true,
+        });
+      }
+    } else {
+      const newPostListResponse = await getNextPagePostsListResultUsingLimit(
+        10,
+        lastVisiblePost
+      );
+      if (newPostListResponse instanceof Error) {
+        toast.error("Something went wrong. Please try again!", {
+          duration: 4000,
+          closeButton: true,
+        });
+      } else if (
+        newPostListResponse.newLastVisible &&
+        newPostListResponse.newPostListToReturn.length > 0
+      ) {
+        setPostsList((prev) => [
+          ...(prev ?? []),
+          ...newPostListResponse.newPostListToReturn,
+        ]);
+        setLastVisiblePost(newPostListResponse.newLastVisible);
+      } else {
+        toast.error("That's all for now. Check back later for new posts!", {
+          duration: 4000,
+          closeButton: true,
+        });
+      }
     }
   };
 
@@ -181,7 +276,7 @@ function PostsListPage() {
             <Button
               variant="outline"
               className="w-max self-center bg-transparent"
-              onClick={() => {}}
+              onClick={handleLoadMoreClick}
             >
               Load More
             </Button>

@@ -22,7 +22,7 @@ const HomePage = () => {
   const getHomePageCards = async () => {
     const getPostListsResponse = await getFirstPagePostsListResultUsingLimit(5);
     if (!(getPostListsResponse instanceof Error)) {
-      setHomePageCardsList(getPostListsResponse);
+      setHomePageCardsList(getPostListsResponse.postListToReturn);
     }
   };
 

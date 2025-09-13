@@ -14,6 +14,7 @@ import {
   collectionGroup,
   deleteDoc,
   doc,
+  DocumentData,
   documentId,
   getDoc,
   getDocs,
@@ -21,6 +22,8 @@ import {
   limit,
   orderBy,
   query,
+  QueryDocumentSnapshot,
+  startAfter,
   Timestamp,
   updateDoc,
   where,
@@ -110,9 +113,33 @@ export const getFirstPagePostsListResultUsingLimit = async (
       limit(limitCount)
     );
     const postList = await getDocs(q);
-    return postList.docs.map((doc) => {
+    const lastVisible = postList.docs[postList.docs.length - 1];
+    const postListToReturn = postList.docs.map((doc) => {
       return { ...(doc.data() as PostType), postUid: doc.id };
     });
+    return { lastVisible, postListToReturn };
+  } catch (error) {
+    return error as Error;
+  }
+};
+
+export const getNextPagePostsListResultUsingLimit = async (
+  limitCount: number,
+  lastVisible: QueryDocumentSnapshot<DocumentData>
+) => {
+  try {
+    const q = query(
+      collection(db, "posts"),
+      orderBy("createdAt", "desc"),
+      startAfter(lastVisible),
+      limit(limitCount)
+    );
+    const postList = await getDocs(q);
+    const newLastVisible = postList.docs[postList.docs.length - 1];
+    const newPostListToReturn = postList.docs.map((doc) => {
+      return { ...(doc.data() as PostType), postUid: doc.id };
+    });
+    return { newLastVisible, newPostListToReturn };
   } catch (error) {
     return error as Error;
   }
@@ -130,9 +157,35 @@ export const getFirstPagePostsListResultUsingLimitAndGameFilter = async (
       limit(limitCount)
     );
     const postList = await getDocs(q);
-    return postList.docs.map((doc) => {
+    const lastVisible = postList.docs[postList.docs.length - 1];
+    const postListToReturn = postList.docs.map((doc) => {
       return { ...(doc.data() as PostType), postUid: doc.id };
     });
+    return { lastVisible, postListToReturn };
+  } catch (error) {
+    return error as Error;
+  }
+};
+
+export const getNextPagePostsListResultUsingLimitAndGameFilter = async (
+  limitCount: number,
+  gameFilterList: string[],
+  lastVisible: QueryDocumentSnapshot<DocumentData>
+) => {
+  try {
+    const q = query(
+      collection(db, "posts"),
+      where("selectedGame.guid", "in", gameFilterList),
+      orderBy("createdAt", "desc"),
+      startAfter(lastVisible),
+      limit(limitCount)
+    );
+    const postList = await getDocs(q);
+    const newLastVisible = postList.docs[postList.docs.length - 1];
+    const newPostListToReturn = postList.docs.map((doc) => {
+      return { ...(doc.data() as PostType), postUid: doc.id };
+    });
+    return { newLastVisible, newPostListToReturn };
   } catch (error) {
     return error as Error;
   }
