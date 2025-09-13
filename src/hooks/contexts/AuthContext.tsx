@@ -10,6 +10,8 @@ interface AuthContextType {
   setUser: React.Dispatch<React.SetStateAction<UserType>>;
   isLoggedIn: boolean | null;
   setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean | null>>;
+  authStateUpdateCheck: boolean;
+  setAuthStateUpdateCheck: React.Dispatch<React.SetStateAction<boolean>>;
 }
 const AuthContext = createContext<AuthContextType>({
   user: {
@@ -19,10 +21,13 @@ const AuthContext = createContext<AuthContextType>({
     fName: "",
     lName: "",
     username: "",
+    authUid: "",
   },
   setUser: () => {},
   isLoggedIn: null,
   setIsLoggedIn: () => {},
+  authStateUpdateCheck: false,
+  setAuthStateUpdateCheck: () => {},
 });
 
 export function useAuth() {
@@ -36,8 +41,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fName: "",
     lName: "",
     username: "",
+    authUid: "",
   });
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [authStateUpdateCheck, setAuthStateUpdateCheck] =
+    useState<boolean>(false);
 
   useEffect(() => {
     onAuthStateChanged(auth, async (user) => {
@@ -57,17 +65,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           fName: "",
           lName: "",
           username: "",
+          authUid: "",
         });
         setIsLoggedIn(false);
       }
     });
-  }, []);
+  }, [authStateUpdateCheck]);
 
   const value = {
     user,
     setUser,
     isLoggedIn,
     setIsLoggedIn,
+    authStateUpdateCheck,
+    setAuthStateUpdateCheck,
   };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

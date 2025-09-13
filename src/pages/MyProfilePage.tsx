@@ -5,6 +5,7 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -53,6 +54,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { IoWarning } from "react-icons/io5";
+import {
+  reauthenticateUserSignInWithEmailAndPassword,
+  reauthenticateUserSignInWithGoogle,
+} from "@/utils/authFunctions";
+import { FcGoogle } from "react-icons/fc";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { Separator } from "@/components/ui/separator";
 
 const MyProfileSegmentControlTabs = [
   { title: "Edit Profile", value: "my-profile" },
@@ -85,6 +94,21 @@ function MyProfilePage() {
   const [crop, setCrop] = useState<Crop>();
   const [removeExistingProfilePic, setRemoveExistingProfilePic] =
     useState<boolean>(false);
+  const [showDeleteAccountPopup, setShowDeleteAccountPopup] =
+    useState<boolean>(false);
+  const [deleteAccountPopupStage, setDeleteAccountPopupStage] = useState<
+    "are_you_sure" | "input_confirmation_text" | "reauthenticate_user"
+  >("are_you_sure");
+  const [
+    deleteAccountPopupConfirmationText,
+    setDeleteAccountPopupConfirmationText,
+  ] = useState<string>("");
+  const [deleteAccountLoading, setDeleteAccountLoading] =
+    useState<boolean>(false);
+  const [reauthenticatePasswordInput, setReauthenticatePasswordInput] =
+    useState<string>("");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [reauthError, setReauthError] = useState<string | null>(null);
 
   const imgSrc = useMemo(() => {
     if (uploadedFile) {
@@ -236,7 +260,7 @@ function MyProfilePage() {
     if (file) {
       setUploadedFile(file);
       setShowImageCropPopup(true);
-      handleEditClick();
+      if (!isUserEditingDetails) handleEditClick();
     }
   };
 
@@ -348,6 +372,55 @@ function MyProfilePage() {
     }
   };
 
+  const handleBackToMyProfile = () => {
+    setShowDeleteAccountPopup(false);
+    setDeleteAccountPopupStage("are_you_sure");
+    setDeleteAccountPopupConfirmationText("");
+  };
+
+  const handleDeleteAccountPopupPrimaryButtonClick = async () => {
+    if (deleteAccountPopupStage === "are_you_sure") {
+      setDeleteAccountPopupConfirmationText("");
+      setDeleteAccountPopupStage("input_confirmation_text");
+    } else if (deleteAccountPopupStage === "input_confirmation_text") {
+      setReauthenticatePasswordInput("");
+      setReauthError(null);
+      setDeleteAccountPopupStage("reauthenticate_user");
+    }
+  };
+
+  const handleUserReauthWithGoogle = async () => {
+    setDeleteAccountLoading(true);
+    const deleteAccountResponse = await reauthenticateUserSignInWithGoogle(
+      user
+    );
+    if (deleteAccountResponse instanceof Error) {
+      setReauthError(deleteAccountResponse.message);
+    } else {
+      router.refresh();
+    }
+    setDeleteAccountLoading(false);
+  };
+
+  const handleUserReauthWithPassword = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
+    e.preventDefault();
+    setDeleteAccountLoading(true);
+    const deleteAccountResponse =
+      await reauthenticateUserSignInWithEmailAndPassword(
+        user.email,
+        reauthenticatePasswordInput,
+        user
+      );
+    if (deleteAccountResponse instanceof Error) {
+      setReauthError(deleteAccountResponse.message);
+    } else {
+      router.refresh();
+    }
+    setDeleteAccountLoading(false);
+  };
+
   if (isLoggedIn === false) {
     return <></>;
   }
@@ -364,157 +437,168 @@ function MyProfilePage() {
             />
           </div>
           {activeSegmentTab === "my-profile" ? (
-            <div className="flex flex-row items-center justify-between gap-5 w-full">
-              <label
-                htmlFor="avatar-upload"
-                className="cursor-pointer relative"
-              >
-                <Avatar className="h-36 w-36">
-                  <AvatarImage
-                    src={croppedImgSrc}
-                    alt="profile image"
-                    style={{ fontSize: 120 }}
-                  />
-                  <AvatarFallback className="bg-transparent text-black">
-                    <VscAccount size="120" />
-                  </AvatarFallback>
-                </Avatar>
-                <input
-                  id="avatar-upload"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleUserProfilePhotoUpload}
-                  multiple={false}
-                  disabled={uploadUserDataLoading}
-                />
-                {croppedImgSrc && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <IoClose
-                        className="absolute bg-gray-500 text-white p-1 rounded-full top-0 right-0"
-                        size="26"
-                        style={{
-                          cursor: uploadUserDataLoading
-                            ? "not-allowed"
-                            : "pointer",
-                        }}
-                        onClick={handleRemoveImageClick}
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent className="border border-zinc-900">
-                      <p>Remove Image</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-              </label>
-              <div className="flex flex-col items-center justify-between gap-5 w-full">
-                <div className="flex flex-row items-end justify-start w-full gap-5">
-                  <div className="grid w-full max-w-sm items-center gap-2">
-                    <Label htmlFor="username" className="text-black">
-                      Username
-                    </Label>
-                    <Input
-                      id="username"
-                      placeholder="Username"
-                      name="username"
-                      value={
-                        isUserEditingDetails
-                          ? updatedUserDetails.username
-                          : user.username
-                      }
-                      onChange={handleUserDataChange}
-                      disabled={!isUserEditingDetails}
-                      className="text-black placeholder:text-black border-black"
+            <div className="flex flex-col w-full items-start justify-start">
+              <div className="flex flex-row items-center justify-between gap-5 w-full">
+                <label
+                  htmlFor="avatar-upload"
+                  className="cursor-pointer relative"
+                >
+                  <Avatar className="h-36 w-36">
+                    <AvatarImage
+                      src={croppedImgSrc}
+                      alt="profile image"
+                      style={{ fontSize: 120 }}
                     />
+                    <AvatarFallback className="bg-transparent text-black">
+                      <VscAccount size="120" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleUserProfilePhotoUpload}
+                    multiple={false}
+                    disabled={uploadUserDataLoading}
+                  />
+                  {croppedImgSrc && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <IoClose
+                          className="absolute bg-gray-500 text-white p-1 rounded-full top-0 right-0"
+                          size="26"
+                          style={{
+                            cursor: uploadUserDataLoading
+                              ? "not-allowed"
+                              : "pointer",
+                          }}
+                          onClick={handleRemoveImageClick}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent className="border border-zinc-900">
+                        <p>Remove Image</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </label>
+                <div className="flex flex-col items-center justify-between gap-5 w-full">
+                  <div className="flex flex-row items-end justify-start w-full gap-5">
+                    <div className="grid w-full max-w-sm items-center gap-2">
+                      <Label htmlFor="username" className="text-black">
+                        Username
+                      </Label>
+                      <Input
+                        id="username"
+                        placeholder="Username"
+                        name="username"
+                        value={
+                          isUserEditingDetails
+                            ? updatedUserDetails.username
+                            : user.username
+                        }
+                        onChange={handleUserDataChange}
+                        disabled={!isUserEditingDetails}
+                        className="text-black placeholder:text-black border-black"
+                      />
+                    </div>
+                    {!isUserEditingDetails && (
+                      <Button
+                        type="button"
+                        className="bg-[#4b5085] hover:bg-[#35385e] hover:text-white"
+                        onClick={handleEditClick}
+                      >
+                        Edit
+                      </Button>
+                    )}
                   </div>
-                  {!isUserEditingDetails && (
+                  <div className="flex flex-row items-center justify-between w-full gap-5">
+                    <div className="grid w-full max-w-sm items-center gap-2">
+                      <Label htmlFor="fName" className="text-black">
+                        First Name
+                      </Label>
+                      <Input
+                        id="fName"
+                        placeholder="First Name"
+                        name="fName"
+                        value={
+                          isUserEditingDetails
+                            ? updatedUserDetails.fName
+                            : user.fName
+                        }
+                        onChange={handleUserDataChange}
+                        disabled={!isUserEditingDetails}
+                        className="text-black placeholder:text-black border-black"
+                      />
+                    </div>
+                    <div className="grid w-full max-w-sm items-center gap-2">
+                      <Label htmlFor="lName" className="text-black">
+                        Last Name
+                      </Label>
+                      <Input
+                        id="lName"
+                        placeholder="Last Name"
+                        name="lName"
+                        value={
+                          isUserEditingDetails
+                            ? updatedUserDetails.lName
+                            : user.lName
+                        }
+                        onChange={handleUserDataChange}
+                        disabled={!isUserEditingDetails}
+                        className="text-black placeholder:text-black border-black"
+                      />
+                    </div>
+                  </div>
+                  <div
+                    className="flex flex-row justify-between gap-5 items-center w-full"
+                    style={{
+                      visibility: isUserEditingDetails ? "visible" : "hidden",
+                    }}
+                  >
                     <Button
                       type="button"
-                      className="bg-[#4b5085] hover:bg-[#35385e] hover:text-white"
-                      onClick={handleEditClick}
+                      className="w-1/2 text-black"
+                      onClick={() => {
+                        setIsUserEditingDetails(false);
+                        setCroppedFile(null);
+                        setUploadedFile(null);
+                        setRemoveExistingProfilePic(false);
+                      }}
+                      variant="outline"
+                      disabled={uploadUserDataLoading}
                     >
-                      Edit
+                      Cancel
                     </Button>
-                  )}
-                </div>
-                <div className="flex flex-row items-center justify-between w-full gap-5">
-                  <div className="grid w-full max-w-sm items-center gap-2">
-                    <Label htmlFor="fName" className="text-black">
-                      First Name
-                    </Label>
-                    <Input
-                      id="fName"
-                      placeholder="First Name"
-                      name="fName"
-                      value={
-                        isUserEditingDetails
-                          ? updatedUserDetails.fName
-                          : user.fName
-                      }
-                      onChange={handleUserDataChange}
-                      disabled={!isUserEditingDetails}
-                      className="text-black placeholder:text-black border-black"
-                    />
+                    <Button
+                      onClick={handleUpdateUserData}
+                      className="w-1/2 bg-[#4b5085] hover:bg-[#35385e] hover:text-white"
+                      type="submit"
+                      style={{
+                        cursor: uploadUserDataLoading
+                          ? "not-allowed"
+                          : "pointer",
+                      }}
+                    >
+                      {uploadUserDataLoading ? (
+                        <div className="flex flex-row w-full items-center justify-center gap-2">
+                          <AiOutlineLoading3Quarters className="animate-spin" />
+                          <p>Saving...</p>
+                        </div>
+                      ) : (
+                        "Save"
+                      )}
+                    </Button>
                   </div>
-                  <div className="grid w-full max-w-sm items-center gap-2">
-                    <Label htmlFor="lName" className="text-black">
-                      Last Name
-                    </Label>
-                    <Input
-                      id="lName"
-                      placeholder="Last Name"
-                      name="lName"
-                      value={
-                        isUserEditingDetails
-                          ? updatedUserDetails.lName
-                          : user.lName
-                      }
-                      onChange={handleUserDataChange}
-                      disabled={!isUserEditingDetails}
-                      className="text-black placeholder:text-black border-black"
-                    />
-                  </div>
-                </div>
-                <div
-                  className="flex flex-row justify-between gap-5 items-center w-full"
-                  style={{
-                    visibility: isUserEditingDetails ? "visible" : "hidden",
-                  }}
-                >
-                  <Button
-                    type="button"
-                    className="w-1/2 text-black"
-                    onClick={() => {
-                      setIsUserEditingDetails(false);
-                      setCroppedFile(null);
-                      setUploadedFile(null);
-                      setRemoveExistingProfilePic(false);
-                    }}
-                    variant="outline"
-                    disabled={uploadUserDataLoading}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleUpdateUserData}
-                    className="w-1/2 bg-[#4b5085] hover:bg-[#35385e] hover:text-white"
-                    type="submit"
-                    style={{
-                      cursor: uploadUserDataLoading ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    {uploadUserDataLoading ? (
-                      <div className="flex flex-row w-full items-center justify-center gap-2">
-                        <AiOutlineLoading3Quarters className="animate-spin" />
-                        <p>Saving...</p>
-                      </div>
-                    ) : (
-                      "Save"
-                    )}
-                  </Button>
                 </div>
               </div>
+              <Button
+                variant="destructive"
+                onClick={() => setShowDeleteAccountPopup(true)}
+              >
+                <IoWarning />
+                Delete Account
+              </Button>
             </div>
           ) : activeSegmentTab === "my-post" ? (
             <div className="flex flex-col items-center justify-center w-full gap-3">
@@ -693,6 +777,165 @@ function MyProfilePage() {
               Crop Image
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={showDeleteAccountPopup}
+        onOpenChange={setShowDeleteAccountPopup}
+      >
+        <DialogContent
+          className="[&>button>svg]:text-black"
+          onPointerDownOutside={(event) => {
+            handleBackToMyProfile();
+          }}
+          onEscapeKeyDown={(event) => {
+            handleBackToMyProfile();
+          }}
+          showCloseButton={false}
+        >
+          <DialogHeader>
+            <DialogTitle className="text-black text-lg font-semibold">
+              {deleteAccountPopupStage === "are_you_sure"
+                ? "Permanently Delete Your Account?"
+                : deleteAccountPopupStage === "input_confirmation_text"
+                ? "This Action Is Irreversible!"
+                : "For Your Security  "}
+            </DialogTitle>
+            <DialogDescription className="text-black text-base" asChild>
+              {deleteAccountPopupStage === "are_you_sure" ? (
+                <div>
+                  <p className="text-black text-base">
+                    You are about to permanently delete your account. This is
+                    irreversible and will remove all of your data, including:
+                  </p>
+                  <ul className="list-disc list-inside py-1 pl-3">
+                    <li>Your profile, username, and personal information</li>
+                    <li>All posts, comments, and likes you've created</li>
+                    <li>Your entire activity history</li>
+                  </ul>
+                  <p className="text-black text-base font-semibold">
+                    This action cannot be undone.
+                  </p>
+                </div>
+              ) : deleteAccountPopupStage === "input_confirmation_text" ? (
+                <div>
+                  <p>
+                    To confirm that you understand this action cannot be undone,
+                    please type{" "}
+                    <span className="font-bold">DELETE MY ACCOUNT</span> in the
+                    box below to proceed.
+                  </p>
+                </div>
+              ) : (
+                <p>
+                  Please enter your password or sign in with Google one last
+                  time to confirm the permanent deletion of your account.
+                </p>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          {deleteAccountPopupStage === "input_confirmation_text" && (
+            <>
+              <Input
+                placeholder="Enter confirmation text"
+                name="deleteAccountPopupConfirmationText"
+                value={deleteAccountPopupConfirmationText}
+                onChange={(e) => {
+                  setDeleteAccountPopupConfirmationText(e.target.value);
+                }}
+                className="text-black m-1"
+                type="text"
+                tabIndex={1}
+                autoFocus
+              />
+            </>
+          )}
+          {deleteAccountPopupStage === "reauthenticate_user" && (
+            <>
+              <form
+                onSubmit={handleUserReauthWithPassword}
+                className="flex flex-col w-full gap-3"
+              >
+                <Input
+                  id="password"
+                  placeholder="Password*"
+                  name="password"
+                  value={reauthenticatePasswordInput}
+                  onChange={(e) =>
+                    setReauthenticatePasswordInput(e.target.value)
+                  }
+                  className="text-black"
+                  type={showPassword ? "text" : "password"}
+                  icon={showPassword ? FaEyeSlash : FaEye}
+                  onIconClick={() => {
+                    setShowPassword((prev) => !prev);
+                  }}
+                  tabIndex={2}
+                />
+                <p
+                  className="text-red-500 text-wrap"
+                  style={{ display: reauthError ? "block" : "none" }}
+                >
+                  {reauthError || "Something went wrong!"}
+                </p>
+                <Button
+                  type="submit"
+                  variant="outline"
+                  className="w-full text-black"
+                >
+                  {deleteAccountLoading ? (
+                    <AiOutlineLoading3Quarters className="animate-spin" />
+                  ) : (
+                    <>
+                      <IoWarning className="text-red-600" />
+                      Login and Delete Account
+                    </>
+                  )}
+                </Button>
+              </form>
+              <Separator orientation="horizontal" className="my-2" />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleUserReauthWithGoogle}
+                className="text-black w-full"
+              >
+                <FcGoogle /> Login with Google and Delete Account
+              </Button>
+            </>
+          )}
+          {deleteAccountPopupStage !== "reauthenticate_user" && (
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button
+                  variant="outline"
+                  onClick={handleBackToMyProfile}
+                  className="text-black"
+                >
+                  {deleteAccountPopupStage === "are_you_sure"
+                    ? "Back to My Profile"
+                    : "Cancel"}
+                </Button>
+              </DialogClose>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteAccountPopupPrimaryButtonClick}
+                disabled={
+                  deleteAccountPopupStage === "input_confirmation_text" &&
+                  deleteAccountPopupConfirmationText !== "DELETE MY ACCOUNT"
+                }
+              >
+                {deleteAccountPopupStage === "are_you_sure" ? (
+                  "Proceed"
+                ) : (
+                  <>
+                    <IoWarning />
+                    <p>Delete Account</p>
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
     </>

@@ -1,14 +1,21 @@
 import { auth, googleProvider } from "./firebase";
 import {
   createUserWithEmailAndPassword,
+  EmailAuthProvider,
   getAdditionalUserInfo,
+  reauthenticateWithCredential,
+  reauthenticateWithPopup,
   sendEmailVerification,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
 } from "firebase/auth";
-import { handleUserSignUpAddToCollection } from "./userFunctions";
+import {
+  deleteUserAccountByUserObj,
+  handleUserSignUpAddToCollection,
+} from "./userFunctions";
+import { UserType } from "@/types/user";
 
 export const userSignUpWithEmailAndPassword = async (
   email: string,
@@ -42,6 +49,44 @@ export const userSignInWithEmailAndPassword = async (
     return userSignInWithEmailResponse.user;
   } else {
     return false;
+  }
+};
+
+export const reauthenticateUserSignInWithEmailAndPassword = async (
+  email: string,
+  password: string,
+  userObj: UserType
+) => {
+  try {
+    const user = auth.currentUser;
+    if (user) {
+      const credential = EmailAuthProvider.credential(email, password);
+      await reauthenticateWithCredential(user, credential);
+      const reauthenticateUserSignInWithEmailAndPasswordResponse =
+        await deleteUserAccountByUserObj(userObj);
+      if (
+        !reauthenticateUserSignInWithEmailAndPasswordResponse ||
+        reauthenticateUserSignInWithEmailAndPasswordResponse instanceof Error
+      ) {
+        return;
+      } else {
+        return true;
+      }
+    }
+  } catch (error) {
+    return new Error("Error deleting user account!");
+  }
+};
+
+export const reauthenticateUserSignInWithGoogle = async (userObj: UserType) => {
+  const user = auth.currentUser;
+  if (user) {
+    try {
+      await reauthenticateWithPopup(user, googleProvider);
+      await deleteUserAccountByUserObj(userObj);
+    } catch (error) {
+      return new Error("Error deleting user account!");
+    }
   }
 };
 

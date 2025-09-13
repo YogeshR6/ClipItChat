@@ -33,7 +33,7 @@ const AuthSegmentControlTabs = [
 ];
 
 const AuthPage: React.FC = () => {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, setAuthStateUpdateCheck } = useAuth();
   const router = useRouter();
 
   const [formType, setFormType] = useState<AuthFormType>("login");
@@ -88,6 +88,7 @@ const AuthPage: React.FC = () => {
       );
       if (user) {
         localStorage.setItem("lastAuthMethod", "password");
+        setAuthStateUpdateCheck((prev) => !prev);
         router.replace("/");
       } else if (user === false) {
         setShowEmailNotVerifiedPopup(true);
@@ -115,6 +116,7 @@ const AuthPage: React.FC = () => {
       const userSignUpResponse = await userSignInWithGoogle();
       if (userSignUpResponse) {
         localStorage.setItem("lastAuthMethod", "google");
+        setAuthStateUpdateCheck((prev) => !prev);
         router.replace("/");
       }
     } catch (error: any) {

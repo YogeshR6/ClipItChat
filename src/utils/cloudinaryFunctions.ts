@@ -112,6 +112,7 @@ export const deleteImageStoredInCloudinary = async (
 ) => {
   const user = auth.currentUser;
   if (!user) throw new Error("User not authenticated");
+  if (!publicId) return;
   try {
     const token = await user.getIdToken();
     const response = await fetch("/api/delete-image", {

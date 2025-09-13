@@ -3,6 +3,7 @@ import {
   arrayRemove,
   arrayUnion,
   collection,
+  deleteDoc,
   doc,
   getDocs,
   increment,
@@ -10,9 +11,10 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
-import { db } from "./firebase";
+import { auth, db } from "@/utils/firebase";
 import { UserType } from "@/types/user";
 import { deleteImageStoredInCloudinary } from "@/utils/cloudinaryFunctions";
+import { deleteUser } from "firebase/auth";
 
 export const handleUserSignUpAddToCollection = async (
   email: string,
@@ -147,6 +149,40 @@ export const removeUserProfilePic = async (userObj: UserType) => {
     });
   } catch (error) {
     console.error("Error removing user profile photo", error);
+    return error as Error;
+  }
+};
+
+export const deleteUserAccountByUserObj = async (userObj: UserType) => {
+  try {
+    const userPostListQ = query(
+      collection(db, "posts"),
+      where("user.id", "==", userObj.uid)
+    );
+    const userPostList = await getDocs(userPostListQ);
+    userPostList.docs.forEach(async (doc) => {
+      await Promise.all([
+        deleteImageStoredInCloudinary(
+          doc.data().cloudinaryPublicId,
+          "user_posts"
+        ),
+        deleteDoc(doc.ref),
+      ]);
+    });
+
+    await Promise.all([
+      deleteImageStoredInCloudinary(
+        userObj.cloudinaryProfilePhotoPublicId || "",
+        "profile_photos"
+      ),
+      deleteDoc(doc(db, "users", userObj.uid)),
+    ]);
+    const user = auth.currentUser;
+    if (user) {
+      await deleteUser(user);
+    }
+    return true;
+  } catch (error) {
     return error as Error;
   }
 };
