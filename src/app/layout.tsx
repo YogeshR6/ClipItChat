@@ -18,7 +18,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="bg-[#141623] text-white">
+      <body
+        className="bg-[#141623] text-white"
+        style={{
+          backgroundImage: 'url("/background/bg_with_blur.jpg")',
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundAttachment: "fixed",
+        }}
+      >
         <AuthProvider>
           <TopBar />
           {children}

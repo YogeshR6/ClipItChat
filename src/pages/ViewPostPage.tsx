@@ -79,7 +79,7 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
         setDeletePostStatus("deleted");
         router.prefetch("/posts");
         toast.success("Post deleted successfully!", {
-          duration: 1500,
+          duration: 4000,
           closeButton: true,
         });
         setTimeout(() => {
@@ -237,7 +237,7 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
           return prevData;
         });
         toast.success("Comment deleted successfully!", {
-          duration: 1500,
+          duration: 4000,
           closeButton: true,
         });
         setTimeout(() => {
@@ -264,13 +264,13 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
         .writeText(searchText)
         .then(() => {
           toast.success("Game name copied to clipboard!", {
-            duration: 1500,
+            duration: 4000,
             closeButton: true,
           });
         })
         .catch(() => {
           toast.error("Something went wrong! Please try again later!", {
-            duration: 1500,
+            duration: 4000,
             closeButton: true,
           });
         });

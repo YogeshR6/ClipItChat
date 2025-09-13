@@ -304,9 +304,9 @@ function MyProfilePage() {
           type: blob.type,
         });
 
-        if (true) {
+        if ((user.imageStorageUsed || 0) + croppedFile.size / 1048576 > 100) {
           toast.error("You have reached your image storage limit.", {
-            duration: 3000,
+            duration: 4000,
             closeButton: true,
           });
           setUploadedFile(null);
