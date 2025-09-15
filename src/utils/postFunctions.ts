@@ -1,5 +1,6 @@
 import { GameCategoryType } from "@/types/misc";
 import { CommentType, PostType } from "@/types/post";
+import { UserType } from "@/types/user";
 import { deleteImageStoredInCloudinary } from "@/utils/cloudinaryFunctions";
 import { db } from "@/utils/firebase";
 import {
@@ -9,9 +10,7 @@ import {
 } from "@/utils/userFunctions";
 import {
   addDoc,
-  arrayUnion,
   collection,
-  collectionGroup,
   deleteDoc,
   doc,
   DocumentData,
@@ -27,15 +26,11 @@ import {
   Timestamp,
   updateDoc,
   where,
-  writeBatch,
 } from "firebase/firestore";
 
 export const createNewPostImage = async (
   imageUrl: string,
-  user: {
-    id: string;
-    username?: string;
-  },
+  userId: string,
   publicId: string,
   selectedGame: GameCategoryType,
   size: number
@@ -43,10 +38,9 @@ export const createNewPostImage = async (
   try {
     const timestamp = new Date();
     const createNewPostImageResponse = await addDoc(collection(db, "posts"), {
+      authorId: userId,
       imageUrl: imageUrl,
-      user,
       likes: 0,
-      comments: [],
       createdAt: timestamp,
       cloudinaryPublicId: publicId,
       selectedGame: selectedGame,
@@ -54,7 +48,8 @@ export const createNewPostImage = async (
     });
     return createNewPostImageResponse.id;
   } catch (error) {
-    return error as Error;
+    console.error("Error creating new post", error);
+    return new Error("Error creating new post", { cause: error });
   }
 };
 
@@ -74,24 +69,63 @@ export const getPostDataByUid = async (
       getDocs(commentsQuery),
     ]);
 
-    if (postDoc.exists()) {
-      const postData = { ...(postDoc.data() as PostType), postUid: postDoc.id };
-      return {
-        ...postData,
-        comments: commentsSnapshot.docs.map((doc) => ({
-          ...(doc.data() as CommentType),
-          commentUid: doc.id,
-        })),
-      };
-    } else {
+    if (!postDoc.exists()) {
       throw new Error("Post not found");
     }
+
+    const postDataRaw = postDoc.data() as PostType;
+    const postAuthorId = postDataRaw.authorId;
+
+    const authorUidList = new Set<string>();
+    if (postAuthorId) {
+      authorUidList.add(postAuthorId);
+    }
+    commentsSnapshot.docs.forEach((commentDoc) => {
+      const authorId = commentDoc.data().authorId;
+      if (authorId) {
+        authorUidList.add(authorId);
+      }
+    });
+
+    let userProfiles: Record<string, UserType> = {};
+    if (authorUidList.size > 0) {
+      const userPromises = Array.from(authorUidList).map((uid) =>
+        getDoc(doc(db, "users", uid))
+      );
+      const userDocs = await Promise.all(userPromises);
+
+      userDocs.forEach((userDoc) => {
+        if (userDoc.exists()) {
+          userProfiles[userDoc.id] = userDoc.data() as UserType;
+        }
+      });
+    }
+
+    const enrichedComments = commentsSnapshot.docs.map((commentDoc) => {
+      const commentData = commentDoc.data() as CommentType;
+      const authorData = userProfiles[commentData.authorId] || null;
+      return {
+        ...commentData,
+        commentUid: commentDoc.id,
+        user: authorData,
+      };
+    });
+
+    const postData = { ...postDataRaw, postUid: postDoc.id };
+    return {
+      ...postData,
+      comments: enrichedComments,
+      user: userProfiles[postAuthorId] || null,
+    };
   } catch (error) {
-    return error as Error;
+    console.error("Error fetching post data", error);
+    return new Error("Error fetching post data", { cause: error });
   }
 };
 
-export const getAllPostsDataByUserUid = async (userUid: string) => {
+export const getAllPostsDataByUserUid = async (
+  userUid: string
+): Promise<PostType[] | Error> => {
   try {
     const q = query(collection(db, "posts"), where("user.id", "==", userUid));
     const postList = await getDocs(q);
@@ -99,34 +133,103 @@ export const getAllPostsDataByUserUid = async (userUid: string) => {
       return { ...(doc.data() as PostType), postUid: doc.id };
     });
   } catch (error) {
-    return error as Error;
+    console.error("Error fetching posts by user list", error);
+    return new Error("Error fetching posts by user list", { cause: error });
+  }
+};
+
+export const enrichPostsWithUserData = async (
+  postDocs: QueryDocumentSnapshot<DocumentData>[]
+): Promise<PostType[] | Error> => {
+  try {
+    const authorUidList = new Set<string>();
+    postDocs.forEach((doc) => {
+      const authorId = doc.data().authorId;
+      if (authorId) {
+        authorUidList.add(authorId);
+      }
+    });
+
+    if (authorUidList.size === 0) {
+      return postDocs.map((doc) => ({
+        ...(doc.data() as PostType),
+        postUid: doc.id,
+        user: null,
+      }));
+    }
+
+    const userPromises = Array.from(authorUidList).map((uid) =>
+      getDoc(doc(db, "users", uid))
+    );
+    const userDocs = await Promise.all(userPromises);
+
+    const userProfiles: Record<string, UserType> = {};
+    userDocs.forEach((userDoc) => {
+      if (userDoc.exists()) {
+        userProfiles[userDoc.id] = userDoc.data() as UserType;
+      }
+    });
+
+    const enrichedPosts = postDocs.map((doc) => {
+      const postData = doc.data() as PostType;
+      const authorData = userProfiles[postData.authorId] || null;
+      return {
+        ...postData,
+        postUid: doc.id,
+        user: authorData,
+      };
+    });
+
+    return enrichedPosts;
+  } catch (error) {
+    console.error("Error enriching posts by adding user profile data", error);
+    return new Error("Error fetching user profile data for given posts", {
+      cause: error,
+    });
   }
 };
 
 export const getFirstPagePostsListResultUsingLimit = async (
   limitCount: number
-) => {
+): Promise<
+  | {
+      lastVisible: QueryDocumentSnapshot<DocumentData>;
+      postListToReturn: PostType[];
+    }
+  | Error
+> => {
   try {
     const q = query(
       collection(db, "posts"),
       orderBy("createdAt", "desc"),
       limit(limitCount)
     );
-    const postList = await getDocs(q);
-    const lastVisible = postList.docs[postList.docs.length - 1];
-    const postListToReturn = postList.docs.map((doc) => {
-      return { ...(doc.data() as PostType), postUid: doc.id };
-    });
+    const postListSnapshot = await getDocs(q);
+    const lastVisible = postListSnapshot.docs[postListSnapshot.docs.length - 1];
+    const postListToReturn = await enrichPostsWithUserData(
+      postListSnapshot.docs
+    );
+    if (postListToReturn instanceof Error)
+      throw new Error("Error fetching user profile data for given posts");
     return { lastVisible, postListToReturn };
   } catch (error) {
-    return error as Error;
+    console.error("Error fetching first page posts with limits", error);
+    return new Error("Error fetching first page posts with limit", {
+      cause: error,
+    });
   }
 };
 
 export const getNextPagePostsListResultUsingLimit = async (
   limitCount: number,
   lastVisible: QueryDocumentSnapshot<DocumentData>
-) => {
+): Promise<
+  | {
+      newLastVisible: QueryDocumentSnapshot<DocumentData>;
+      newPostListToReturn: PostType[];
+    }
+  | Error
+> => {
   try {
     const q = query(
       collection(db, "posts"),
@@ -134,21 +237,34 @@ export const getNextPagePostsListResultUsingLimit = async (
       startAfter(lastVisible),
       limit(limitCount)
     );
-    const postList = await getDocs(q);
-    const newLastVisible = postList.docs[postList.docs.length - 1];
-    const newPostListToReturn = postList.docs.map((doc) => {
-      return { ...(doc.data() as PostType), postUid: doc.id };
-    });
+    const postListSnapshot = await getDocs(q);
+    const newLastVisible =
+      postListSnapshot.docs[postListSnapshot.docs.length - 1];
+    const newPostListToReturn = await enrichPostsWithUserData(
+      postListSnapshot.docs
+    );
+    if (newPostListToReturn instanceof Error)
+      throw new Error("Error fetching user profile data for given posts");
+
     return { newLastVisible, newPostListToReturn };
   } catch (error) {
-    return error as Error;
+    console.error("Error fetching next page posts with limits", error);
+    return new Error("Error fetching next page posts with limit", {
+      cause: error,
+    });
   }
 };
 
 export const getFirstPagePostsListResultUsingLimitAndGameFilter = async (
   limitCount: number,
   gameFilterList: string[]
-) => {
+): Promise<
+  | {
+      lastVisible: QueryDocumentSnapshot<DocumentData>;
+      postListToReturn: PostType[];
+    }
+  | Error
+> => {
   try {
     const q = query(
       collection(db, "posts"),
@@ -156,14 +272,23 @@ export const getFirstPagePostsListResultUsingLimitAndGameFilter = async (
       orderBy("createdAt", "desc"),
       limit(limitCount)
     );
-    const postList = await getDocs(q);
-    const lastVisible = postList.docs[postList.docs.length - 1];
-    const postListToReturn = postList.docs.map((doc) => {
-      return { ...(doc.data() as PostType), postUid: doc.id };
-    });
+    const postListSnapshot = await getDocs(q);
+    const lastVisible = postListSnapshot.docs[postListSnapshot.docs.length - 1];
+    const postListToReturn = await enrichPostsWithUserData(
+      postListSnapshot.docs
+    );
+    if (postListToReturn instanceof Error)
+      throw new Error("Error fetching user profile data for given posts");
+
     return { lastVisible, postListToReturn };
   } catch (error) {
-    return error as Error;
+    console.error(
+      "Error fetching first page posts with limits and filter",
+      error
+    );
+    return new Error("Error fetching first page posts with limit and filter", {
+      cause: error,
+    });
   }
 };
 
@@ -171,7 +296,13 @@ export const getNextPagePostsListResultUsingLimitAndGameFilter = async (
   limitCount: number,
   gameFilterList: string[],
   lastVisible: QueryDocumentSnapshot<DocumentData>
-) => {
+): Promise<
+  | {
+      newLastVisible: QueryDocumentSnapshot<DocumentData>;
+      newPostListToReturn: PostType[];
+    }
+  | Error
+> => {
   try {
     const q = query(
       collection(db, "posts"),
@@ -180,14 +311,24 @@ export const getNextPagePostsListResultUsingLimitAndGameFilter = async (
       startAfter(lastVisible),
       limit(limitCount)
     );
-    const postList = await getDocs(q);
-    const newLastVisible = postList.docs[postList.docs.length - 1];
-    const newPostListToReturn = postList.docs.map((doc) => {
-      return { ...(doc.data() as PostType), postUid: doc.id };
-    });
+    const postListSnapshot = await getDocs(q);
+    const newLastVisible =
+      postListSnapshot.docs[postListSnapshot.docs.length - 1];
+    const newPostListToReturn = await enrichPostsWithUserData(
+      postListSnapshot.docs
+    );
+    if (newPostListToReturn instanceof Error)
+      throw new Error("Error fetching user profile data for given posts");
+
     return { newLastVisible, newPostListToReturn };
   } catch (error) {
-    return error as Error;
+    console.error(
+      "Error fetching next page posts with limits and filter",
+      error
+    );
+    return new Error("Error fetching next page posts with limit and filter", {
+      cause: error,
+    });
   }
 };
 
@@ -209,7 +350,7 @@ export const deletePostById = async (
     }
     const removeUserPostFromFirestoreResponse =
       await removeUserPostFromFirestore(
-        postData.user.id,
+        postData.user?.uid || "",
         postData.postUid,
         postData.postSize || 0
       );
@@ -223,71 +364,94 @@ export const deletePostById = async (
     await deleteDoc(doc(db, "posts", postData.postUid));
     return true;
   } catch (error) {
-    return error as Error;
+    console.error("Error deleting post by id", error);
+    return new Error("Error deleting the post!", {
+      cause: error,
+    });
   }
 };
 
-export const userLikePost = async (postData: PostType, userId: string) => {
+export const userLikePost = async (
+  postData: PostType,
+  userId: string
+): Promise<boolean | Error> => {
   try {
     const postRef = doc(db, "posts", postData.postUid);
     await updateDoc(postRef, {
       likes: increment(1),
     });
     await addPostToUserLikedPosts(userId, postData.postUid);
+    return true;
   } catch (error) {
-    return error as Error;
+    console.error("Error updating likes on post!", error);
+    return new Error("Error liking the post", {
+      cause: error,
+    });
   }
 };
 
-export const userUnlikePost = async (postData: PostType, userId: string) => {
+export const userUnlikePost = async (
+  postData: PostType,
+  userId: string
+): Promise<boolean | Error> => {
   try {
     const postRef = doc(db, "posts", postData.postUid);
     await updateDoc(postRef, {
       likes: increment(-1),
     });
     await removePostFromUserLikedPosts(userId, postData.postUid);
+    return true;
   } catch (error) {
-    return error as Error;
+    console.error("Error updating likes on post!", error);
+    return new Error("Error un-liking the post", {
+      cause: error,
+    });
   }
 };
 
 export const addUserCommentOnPost = async (
   postData: PostType,
-  userObj: {
-    id: string;
-    username: string;
-  },
+  userId: string,
   comment: string
 ): Promise<string | Error> => {
   try {
     const postRef = doc(db, "posts", postData.postUid);
     const commentsRef = collection(postRef, "comments");
     const newComment = {
-      user: userObj,
+      authorId: userId,
       comment: comment,
       createdAt: Timestamp.now(),
     };
     const docRef = await addDoc(commentsRef, newComment);
     return docRef.id;
   } catch (error) {
-    return error as Error;
+    console.error("Error adding comment on post!", error);
+    return new Error("Error adding comment on post!", {
+      cause: error,
+    });
   }
 };
 
 export const deleteCommentFromPost = async (
   postData: PostType,
   commentToRemove: CommentType
-) => {
+): Promise<boolean | Error> => {
   try {
     const postRef = doc(db, "posts", postData.postUid);
     const commentRef = doc(postRef, "comments", commentToRemove.commentUid);
     await deleteDoc(commentRef);
+    return true;
   } catch (error) {
-    return error as Error;
+    console.error("Error deleting comment on post!", error);
+    return new Error("Error deleting comment on post!", {
+      cause: error,
+    });
   }
 };
 
-export const getAllLikedPostsDataByUserUid = async (userUid: string) => {
+export const getAllLikedPostsDataByUserUid = async (
+  userUid: string
+): Promise<PostType[] | Error> => {
   try {
     const getUserData = await getDoc(doc(db, "users", userUid));
     if (!getUserData.exists()) {
@@ -307,51 +471,9 @@ export const getAllLikedPostsDataByUserUid = async (userUid: string) => {
       return { ...(doc.data() as PostType), postUid: doc.id };
     });
   } catch (error) {
-    return error as Error;
-  }
-};
-
-export const updatePostUsernames = async (
-  userId: string,
-  newUsername: string
-) => {
-  try {
-    const q = query(collection(db, "posts"), where("user.id", "==", userId));
-    const postList = await getDocs(q);
-    const batch = writeBatch(db);
-    postList.docs.forEach((doc) => {
-      batch.update(doc.ref, {
-        "user.username": newUsername,
-      });
+    console.error("Error fetching posts liked by user list", error);
+    return new Error("Error fetching posts liked by user list", {
+      cause: error,
     });
-    await batch.commit();
-  } catch (error) {
-    return error as Error;
-  }
-};
-
-export const updateCommentUsernames = async (
-  userId: string,
-  newUsername: string
-) => {
-  try {
-    const commentsQuery = query(
-      collectionGroup(db, "comments"),
-      where("user.id", "==", userId)
-    );
-
-    const querySnapshot = await getDocs(commentsQuery);
-
-    const batch = writeBatch(db);
-    querySnapshot.forEach((doc) => {
-      const commentRef = doc.ref;
-      batch.update(commentRef, {
-        "user.username": newUsername,
-      });
-    });
-
-    await batch.commit();
-  } catch (error) {
-    return error as Error;
   }
 };

@@ -10,5 +10,4 @@ export type UserType = {
   likedPosts?: string[];
   cloudinaryProfilePhotoSize?: number;
   imageStorageUsed?: number;
-  authUid: string;
 };

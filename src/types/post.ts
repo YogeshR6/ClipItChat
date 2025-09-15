@@ -1,12 +1,11 @@
 import { GameCategoryType } from "@/types/misc";
+import { UserType } from "@/types/user";
 import { Timestamp } from "firebase/firestore";
 
 export type PostType = {
+  authorId: string;
   createdAt: Timestamp;
-  user: {
-    id: string;
-    username?: string;
-  };
+  user: UserType | null;
   imageUrl: string;
   postUid: string;
   cloudinaryPublicId: string;
@@ -17,10 +16,8 @@ export type PostType = {
 };
 
 export type CommentType = {
-  user: {
-    id: string;
-    username?: string;
-  };
+  authorId: string;
+  user: UserType;
   comment: string;
   createdAt: Timestamp;
   commentUid: string;

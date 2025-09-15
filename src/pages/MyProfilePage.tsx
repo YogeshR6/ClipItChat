@@ -21,8 +21,6 @@ import { uploadProfilePhotoToCloudinaryAndSaveUrlInFirestore } from "@/utils/clo
 import {
   getAllLikedPostsDataByUserUid,
   getAllPostsDataByUserUid,
-  updateCommentUsernames,
-  updatePostUsernames,
 } from "@/utils/postFunctions";
 import {
   removeUserProfilePic,
@@ -225,11 +223,6 @@ function MyProfilePage() {
     }
 
     await updateUserDetailsInFirestore(user.uid, updatedUserDetails);
-    if (updatedUserDetails.username !== user.username) {
-      // Handle username change on posts
-      await updatePostUsernames(user.uid, updatedUserDetails.username || "");
-      await updateCommentUsernames(user.uid, updatedUserDetails.username || "");
-    }
 
     setUser((prevUser) => {
       return {

@@ -1,5 +1,4 @@
 import {
-  addDoc,
   arrayRemove,
   arrayUnion,
   collection,
@@ -8,6 +7,7 @@ import {
   getDocs,
   increment,
   query,
+  setDoc,
   updateDoc,
   where,
 } from "firebase/firestore";
@@ -21,7 +21,8 @@ export const handleUserSignUpAddToCollection = async (
   uid: string
 ) => {
   try {
-    const userSignUpResponse = await addDoc(collection(db, "users"), {
+    const userDocRef = doc(db, "users", uid);
+    const userSignUpResponse = await setDoc(userDocRef, {
       email: email,
       authUid: uid,
       photoUrl: "",

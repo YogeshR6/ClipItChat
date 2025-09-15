@@ -37,7 +37,7 @@ export const Card = React.memo(
     >
       <Image
         src={card.imageUrl}
-        alt={card.user.id}
+        alt={card.user?.uid || "Post"}
         fill
         className="object-cover absolute inset-0"
         loading="lazy"
@@ -53,7 +53,7 @@ export const Card = React.memo(
         </div>
         <div className="text-xl md:text-2xl font-medium bg-clip-text text-transparent bg-gradient-to-b from-neutral-50 to-neutral-200 flex flex-row items-center justify-start gap-2">
           <CgProfile className="text-white" />
-          {card.user.username}
+          {card.user?.username}
         </div>
         <div className="text-xl md:text-2xl font-medium bg-clip-text text-transparent bg-gradient-to-b from-neutral-50 to-neutral-200 flex flex-row items-center justify-start gap-5">
           <div className="flex flex-row items-center justify-start gap-2">

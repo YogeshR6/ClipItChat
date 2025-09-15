@@ -23,11 +23,11 @@ export const userSignUpWithEmailAndPassword = async (
 ) => {
   const { user } = await createUserWithEmailAndPassword(auth, email, password);
   if (user?.email) {
-    const [userSignUpResponse, verifyUserResponse] = await Promise.all([
+    await Promise.all([
       handleUserSignUpAddToCollection(user.email, user.uid),
       sendEmailVerification(user),
     ]);
-    return userSignUpResponse;
+    return true;
   }
 };
 
