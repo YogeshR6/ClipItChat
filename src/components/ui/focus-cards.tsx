@@ -106,7 +106,7 @@ export function FocusCards({
   const [hovered, setHovered] = useState<number | null>(null);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mx-auto md:px-8 w-full">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mx-auto px-2 md:px-8 w-full">
       {cards.map((card, index) => (
         <Card
           key={card.postUid}

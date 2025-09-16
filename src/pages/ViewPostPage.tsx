@@ -49,7 +49,7 @@ interface ViewPostPageProps {
 }
 
 const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
-  const { isLoggedIn, user, setUser } = useAuth();
+  const { isLoggedIn, user, setUser, isLessThanMobile } = useAuth();
   const router = useRouter();
 
   const commentInputRef = useRef<HTMLInputElement | null>(null);
@@ -281,7 +281,7 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
 
   return (
     <>
-      <div className="flex items-center justify-center px-5 mb-10">
+      <div className="flex items-center justify-center px-2 sm:px-3 md:px-5 mb-10">
         <div className="flex flex-col gap-4 items-start justify-center max-w-[1200px] w-full">
           {postData && (
             <>
@@ -292,80 +292,99 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
                 height={1080}
                 className="border border-black w-full self-center"
               />
-              <div className="flex flex-row w-full justify-between items-start">
-                <div className="flex-1 flex flex-col items-start justify-start gap-4">
-                  <div className="flex flex-row gap-3 items-center justify-center border-2 border-white rounded-xl py-1 px-2">
-                    <p className="text-2xl font-semibold">Post by:</p>
-                    <Avatar className="ml-2">
-                      <AvatarImage
-                        src={postData.user?.photoUrl}
-                        alt="profile image"
-                      />
-                      <AvatarFallback className="bg-transparent">
-                        <CgProfile size="25" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <p className="text-2xl font-semibold">
-                      {postData.user?.username}
-                    </p>
+              <div className="flex flex-col-reverse md:flex-row w-full justify-between items-start gap-4 md:gap-0">
+                <div className="flex-1 w-full flex flex-col items-start justify-start gap-4">
+                  <div className="flex flex-wrap w-full items-center justify-start gap-4">
+                    <div className="flex flex-wrap gap-3 items-center justify-center border-2 border-white rounded-xl py-1 px-2">
+                      <p className="text-base sm:text-xl md:text-2xl font-semibold">
+                        Post by:
+                      </p>
+                      <Avatar className="ml-2">
+                        <AvatarImage
+                          src={postData.user?.photoUrl}
+                          alt="profile image"
+                        />
+                        <AvatarFallback className="bg-transparent">
+                          <CgProfile size={isLessThanMobile ? "20" : "25"} />
+                        </AvatarFallback>
+                      </Avatar>
+                      <p className="text-base sm:text-xl md:text-2xl font-semibold">
+                        {postData.user?.username}
+                      </p>
+                    </div>
+                    <div className="flex flex-row sm:gap-2 items-center justify-center border-2 border-white rounded-xl py-1 px-2">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            onClick={handleUserLikePost}
+                            className="text-white bg-transparent cursor-pointer flex flex-row items-center justify-center text-2xl md:text-3xl gap-1 hover:bg-[#4b5085] px-2 rounded-xl"
+                          >
+                            {user.likedPosts?.includes(postId) ? (
+                              <FaHeart
+                                className="text-red-600 mt-[1px]"
+                                size={isLessThanMobile ? "20" : "28"}
+                              />
+                            ) : (
+                              <FaRegHeart
+                                className="text-white mt-[1px]"
+                                size={isLessThanMobile ? "20" : "28"}
+                              />
+                            )}
+                            {postData.likes}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent sideOffset={8}>
+                          <p>
+                            {user.likedPosts?.includes(postId)
+                              ? "Unlike"
+                              : "Like"}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            onClick={handleUserClickCommentIcon}
+                            className="text-white bg-transparent cursor-pointer flex flex-row items-center justify-center text-2xl md:text-3xl gap-1 hover:bg-[#4b5085] px-2 rounded-xl"
+                          >
+                            {!postData.comments?.length ||
+                            postData.comments?.length === 0 ? (
+                              <FaRegComment
+                                className="text-white mt-[1px]"
+                                size={isLessThanMobile ? "20" : "28"}
+                              />
+                            ) : postData.comments?.length === 1 ? (
+                              <FaComment
+                                className="text-white mt-[1px]"
+                                size={isLessThanMobile ? "20" : "28"}
+                              />
+                            ) : (
+                              <FaComments
+                                className="text-white mt-[1px]"
+                                size={isLessThanMobile ? "20" : "28"}
+                              />
+                            )}
+                            {postData.comments?.length || 0}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent sideOffset={8}>
+                          <p>Comments</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    {user.uid === postData.authorId && (
+                      <Button
+                        onClick={() => setShowDeletePostConfirmationPopup(true)}
+                        variant="destructive"
+                        type="button"
+                        className="text-white px-2"
+                      >
+                        <MdDelete />
+                        Delete Post
+                      </Button>
+                    )}
                   </div>
-                  <div className="flex flex-row gap-2 items-center justify-center border-2 border-white rounded-xl py-1 px-2">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div
-                          onClick={handleUserLikePost}
-                          className="text-white bg-transparent cursor-pointer flex flex-row items-center justify-center text-3xl gap-1 hover:bg-[#4b5085] px-2 rounded-xl"
-                        >
-                          {user.likedPosts?.includes(postId) ? (
-                            <FaHeart className="text-red-600" size="28" />
-                          ) : (
-                            <FaRegHeart className="text-white" size="28" />
-                          )}
-                          {postData.likes}
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent sideOffset={8}>
-                        <p>
-                          {user.likedPosts?.includes(postId)
-                            ? "Unlike"
-                            : "Like"}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div
-                          onClick={handleUserClickCommentIcon}
-                          className="text-white bg-transparent cursor-pointer flex flex-row items-center justify-center text-3xl gap-1 hover:bg-[#4b5085] px-2 rounded-xl"
-                        >
-                          {!postData.comments?.length ||
-                          postData.comments?.length === 0 ? (
-                            <FaRegComment className="text-white" size="28" />
-                          ) : postData.comments?.length === 1 ? (
-                            <FaComment className="text-white" size="28" />
-                          ) : (
-                            <FaComments className="text-white" size="28" />
-                          )}
-                          {postData.comments?.length || 0}
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent sideOffset={8}>
-                        <p>Comments</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                  {user.uid === postData.authorId && (
-                    <Button
-                      onClick={() => setShowDeletePostConfirmationPopup(true)}
-                      variant="destructive"
-                      type="button"
-                      className="text-white px-2"
-                    >
-                      <MdDelete />
-                      Delete Post
-                    </Button>
-                  )}
-                  <p className="text-2xl">Comments</p>
+                  <p className="text-base sm:text-xl md:text-2xl">Comments</p>
                   <div className="flex flex-row gap-2 items-center justify-start">
                     <Input
                       placeholder="Add comment"
@@ -395,7 +414,7 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
                     {postData?.comments?.map((comment) => (
                       <React.Fragment key={comment.commentUid}>
                         <div className="bg-[#4b5085] rounded-xl flex flex-col justify-center items-start px-3 py-2 w-full">
-                          <p className="font-semibold text-xl flex flex-row items-center justify-between w-full">
+                          <p className="font-semibold text-lg sm:text-xl flex flex-row items-center justify-between w-full">
                             {comment.user?.username || "[Deleted account]"}
                             {user.uid === comment.authorId && (
                               <Tooltip>
@@ -419,9 +438,9 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
                               </Tooltip>
                             )}
                           </p>
-                          <p className="text-lg flex flex-row items-center justify-between w-full">
+                          <p className="text-base sm:text-lg flex flex-col sm:flex-row items-start sm:items-end justify-between w-full">
                             {comment.comment}
-                            <span className="text-sm">
+                            <span className="text-sm w-max text-nowrap self-end">
                               {formatTimeAgo(comment.createdAt.toDate())}
                             </span>
                           </p>
@@ -436,8 +455,8 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
                     <TooltipTrigger asChild>
                       <Image
                         src={postData.selectedGame.image["medium_url"]}
-                        width={70}
-                        height={70}
+                        width={isLessThanMobile ? 50 : 70}
+                        height={isLessThanMobile ? 50 : 70}
                         alt={postData.selectedGame.name}
                         className="cursor-pointer"
                         onClick={() =>
@@ -452,11 +471,13 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
                     </TooltipContent>
                   </Tooltip>
                   <div className="flex flex-col items-start justify-between gap-1 pl-2">
-                    <p className="text-2xl">Category:</p>
+                    <p className="text-base sm:text-xl md:text-2xl">
+                      Category:
+                    </p>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <p
-                          className="text-2xl cursor-pointer"
+                          className="text-base sm:text-xl md:text-2xl cursor-pointer"
                           onClick={() =>
                             copyGameCategoryToClipBoard(
                               postData.selectedGame.name

@@ -84,6 +84,7 @@ export const reauthenticateUserSignInWithGoogle = async (userObj: UserType) => {
     try {
       await reauthenticateWithPopup(user, googleProvider);
       await deleteUserAccountByUserObj(userObj);
+      return true;
     } catch (error) {
       return new Error("Error deleting user account!");
     }

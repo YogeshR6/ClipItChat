@@ -65,7 +65,7 @@ import { Progress } from "@/components/ui/progress";
 const MyProfileSegmentControlTabs = [
   { title: "Edit Profile", value: "my-profile" },
   { title: "My Posts", value: "my-post" },
-  { title: "My Liked Posts", value: "my-liked-post" },
+  { title: "Liked Posts", value: "my-liked-post" },
 ];
 
 function MyProfilePage() {
@@ -430,9 +430,9 @@ function MyProfilePage() {
 
   return (
     <>
-      <div className="flex flex-col items-center justify-center">
-        <div className="w-[40%] flex flex-col items-start justify-start gap-8 bg-white rounded-xl p-4">
-          <div className="rounded-full bg-gray-300 flex flex-row items-center justify-center w-full">
+      <div className="flex flex-col items-center justify-center px-2">
+        <div className="w-full sm:w-[80%] lg:w-[50%] flex flex-col items-start justify-start gap-8 bg-white rounded-xl p-1 sm:p-4">
+          <div className="rounded-full bg-gray-300 flex flex-row items-center justify-center w-full mt-2 sm:mt-0">
             <MyProfileSegmentControl
               activeTab={activeSegmentTab}
               setActiveTab={setActiveSegmentTab}
@@ -440,13 +440,13 @@ function MyProfilePage() {
             />
           </div>
           {activeSegmentTab === "my-profile" ? (
-            <div className="flex flex-col w-full items-start justify-start">
-              <div className="flex flex-row items-center justify-between gap-5 w-full">
+            <div className="flex flex-col w-full items-start justify-start p-2 sm:p-0 gap-5">
+              <div className="flex flex-col sm:flex-row items-center sm:items-center justify-between gap-5 w-full">
                 <label
                   htmlFor="avatar-upload"
                   className="cursor-pointer relative"
                 >
-                  <Avatar className="h-36 w-36">
+                  <Avatar className="h-24 sm:h-36 w-24 sm:w-36">
                     <AvatarImage
                       src={croppedImgSrc}
                       alt="profile image"
@@ -595,14 +595,8 @@ function MyProfilePage() {
                   </div>
                 </div>
               </div>
-              <div className="flex flex-row items-center justify-between w-full gap-5">
-                <Button
-                  variant="destructive"
-                  onClick={() => setShowDeleteAccountPopup(true)}
-                >
-                  <IoWarning />
-                  Delete Account
-                </Button>
+              <Separator orientation="horizontal" />
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-5">
                 <div className="flex flex-col items-start justify-center w-full text-black gap-1">
                   <Progress
                     value={getValueOfStorageUsed(user)}
@@ -626,6 +620,13 @@ function MyProfilePage() {
                     </Tooltip>
                   </p>
                 </div>
+                <Button
+                  variant="destructive"
+                  onClick={() => setShowDeleteAccountPopup(true)}
+                >
+                  <IoWarning />
+                  Delete Account
+                </Button>
               </div>
             </div>
           ) : activeSegmentTab === "my-post" ? (
@@ -634,7 +635,7 @@ function MyProfilePage() {
                 userPostList.map((post) => (
                   <div
                     key={post.postUid}
-                    className="border-2 p-3 cursor-pointer rounded-2xl flex flex-row items-center justify-between w-full gap-5"
+                    className="border-2 p-3 cursor-pointer rounded-2xl flex flex-col sm:flex-row items-center justify-between w-full gap-5"
                     onClick={() => handlePostClick(post.postUid)}
                   >
                     <Image
@@ -689,7 +690,7 @@ function MyProfilePage() {
                 userLikedPostList.map((post) => (
                   <div
                     key={post.postUid}
-                    className="border-2 p-3 cursor-pointer rounded-2xl flex flex-row items-center justify-between w-full gap-5"
+                    className="border-2 p-3 cursor-pointer rounded-2xl flex flex-col sm:flex-row items-center justify-between w-full gap-5"
                     onClick={() => handlePostClick(post.postUid)}
                   >
                     <Image
@@ -820,21 +821,24 @@ function MyProfilePage() {
           showCloseButton={false}
         >
           <DialogHeader>
-            <DialogTitle className="text-black text-lg font-semibold">
+            <DialogTitle className="text-black text-base sm:text-lg font-semibold text-left">
               {deleteAccountPopupStage === "are_you_sure"
                 ? "Permanently Delete Your Account?"
                 : deleteAccountPopupStage === "input_confirmation_text"
                 ? "This Action Is Irreversible!"
                 : "For Your Security  "}
             </DialogTitle>
-            <DialogDescription className="text-black text-base" asChild>
+            <DialogDescription
+              className="text-black text-sm sm:text-base"
+              asChild
+            >
               {deleteAccountPopupStage === "are_you_sure" ? (
-                <div>
-                  <p className="text-black text-base">
+                <div className="text-left">
+                  <p className="text-black text-sm sm:text-base">
                     You are about to permanently delete your account. This is
                     irreversible and will remove all of your data, including:
                   </p>
-                  <ul className="list-disc list-inside py-1 pl-3">
+                  <ul className="list-disc list-inside py-1 pl-1 sm:pl-3">
                     <li>Your profile, username, and personal information</li>
                     <li>All posts, comments, and likes you've created</li>
                     <li>Your entire activity history</li>
@@ -844,7 +848,7 @@ function MyProfilePage() {
                   </p>
                 </div>
               ) : deleteAccountPopupStage === "input_confirmation_text" ? (
-                <div>
+                <div className="text-left text-sm sm:text-base">
                   <p>
                     To confirm that you understand this action cannot be undone,
                     please type{" "}
@@ -853,7 +857,7 @@ function MyProfilePage() {
                   </p>
                 </div>
               ) : (
-                <p>
+                <p className="text-left text-sm sm:text-base">
                   Please enter your password or sign in with Google one last
                   time to confirm the permanent deletion of your account.
                 </p>

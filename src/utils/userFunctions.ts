@@ -165,20 +165,22 @@ export const deleteUserAccountByUserObj = async (userObj: UserType) => {
     }
 
     const userPostIds = userDoc.data().posts || [];
-    const userPostListQ = query(
-      collection(db, "posts"),
-      where(documentId(), "in", userPostIds)
-    );
-    const userPostList = await getDocs(userPostListQ);
-    userPostList.docs.forEach(async (doc) => {
-      await Promise.all([
-        deleteImageStoredInCloudinary(
-          doc.data().cloudinaryPublicId,
-          "user_posts"
-        ),
-        deleteDoc(doc.ref),
-      ]);
-    });
+    if (userPostIds.length > 0) {
+      const userPostListQ = query(
+        collection(db, "posts"),
+        where(documentId(), "in", userPostIds)
+      );
+      const userPostList = await getDocs(userPostListQ);
+      userPostList.docs.forEach(async (doc) => {
+        await Promise.all([
+          deleteImageStoredInCloudinary(
+            doc.data().cloudinaryPublicId,
+            "user_posts"
+          ),
+          deleteDoc(doc.ref),
+        ]);
+      });
+    }
 
     await Promise.all([
       deleteImageStoredInCloudinary(

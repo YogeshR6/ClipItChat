@@ -204,7 +204,7 @@ function PostsListPage() {
           }
         }}
       >
-        <DropdownMenuTrigger className="flex flex-row gap-2 items-center justify-center p-2 border border-white ml-8 w-max rounded-2xl">
+        <DropdownMenuTrigger className="flex flex-row gap-2 items-center justify-center p-2 border border-white ml-1 md:ml-8 w-max rounded-2xl">
           <IoFilter /> Filter Posts
         </DropdownMenuTrigger>
         <DropdownMenuContent side="bottom" align="start" className="max-w-64">
@@ -257,7 +257,7 @@ function PostsListPage() {
           )}
         </DropdownMenuContent>
       </DropdownMenu>
-      <div className="flex flex-row items-center justify-start ml-8 gap-3">
+      <div className="flex flex-wrap items-center justify-start ml-1 md:ml-8 gap-3">
         {selectedGames &&
           selectedGames.length > 0 &&
           selectedGames.map((game) => (

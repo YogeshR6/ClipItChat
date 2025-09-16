@@ -4,6 +4,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/utils/firebase";
 import { getUserDetailsFromAuthUid } from "@/utils/userFunctions";
 import { UserType } from "@/types/user";
+import useMediaQuery from "@/hooks/useMediaQuery";
 
 interface AuthContextType {
   user: UserType;
@@ -12,6 +13,8 @@ interface AuthContextType {
   setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean | null>>;
   authStateUpdateCheck: boolean;
   setAuthStateUpdateCheck: React.Dispatch<React.SetStateAction<boolean>>;
+  isLessThanTablet: boolean;
+  isLessThanMobile: boolean;
 }
 const AuthContext = createContext<AuthContextType>({
   user: {
@@ -27,6 +30,8 @@ const AuthContext = createContext<AuthContextType>({
   setIsLoggedIn: () => {},
   authStateUpdateCheck: false,
   setAuthStateUpdateCheck: () => {},
+  isLessThanTablet: false,
+  isLessThanMobile: false,
 });
 
 export function useAuth() {
@@ -44,6 +49,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const [authStateUpdateCheck, setAuthStateUpdateCheck] =
     useState<boolean>(false);
+  const isLessThanTablet = useMediaQuery("(max-width: 768px)");
+  const isLessThanMobile = useMediaQuery("(max-width: 425px)");
 
   useEffect(() => {
     onAuthStateChanged(auth, async (user) => {
@@ -76,6 +83,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoggedIn,
     authStateUpdateCheck,
     setAuthStateUpdateCheck,
+    isLessThanTablet,
+    isLessThanMobile,
   };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

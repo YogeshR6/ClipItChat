@@ -177,7 +177,7 @@ export const MyProfileSegmentControl = ({
               moveSelectedTabToTop(idx);
             }}
             className={cn(
-              "relative px-4 py-2 rounded-full flex-1",
+              "relative px2 sm:px-4 py-1 sm:py-2 rounded-full flex-1",
               tabClassName
             )}
             style={{

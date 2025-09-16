@@ -310,7 +310,7 @@ const UploadPage: React.FC = () => {
 
   return (
     <div className="flex flex-col w-full justify-start items-center px-5 mb-10">
-      <div className="border-2 p-3 flex flex-col w-[35%] justify-start items-center gap-5 rounded-xl bg-white">
+      <div className="border-2 p-1 sm:p-3 flex flex-col w-full sm:w-[70%] lg:w-[40%] justify-start items-center gap-5 rounded-xl bg-white">
         {!uploadedFile ? (
           <div className="w-full border-2 border-black rounded-2xl">
             <FileUpload onChange={handleFileUpload} />
@@ -342,7 +342,7 @@ const UploadPage: React.FC = () => {
             </div>
           )
         )}
-        <div className="flex flex-row gap-5 justify-center items-center text-black">
+        <div className="flex flex-wrap gap-2 sm:gap-5 justify-center items-center text-black">
           <p className="font-bold">Select Category:</p>
           <Select
             value={selectedGame?.guid || ""}
