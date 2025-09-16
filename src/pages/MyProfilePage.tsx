@@ -36,7 +36,7 @@ import React, {
   useState,
 } from "react";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
-import { IoClose } from "react-icons/io5";
+import { IoClose, IoInformationCircleOutline } from "react-icons/io5";
 import { VscAccount } from "react-icons/vsc";
 import ReactCrop, { centerCrop, Crop, makeAspectCrop } from "react-image-crop";
 import { toast } from "sonner";
@@ -60,6 +60,7 @@ import {
 import { FcGoogle } from "react-icons/fc";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
 
 const MyProfileSegmentControlTabs = [
   { title: "Edit Profile", value: "my-profile" },
@@ -414,6 +415,15 @@ function MyProfilePage() {
     setDeleteAccountLoading(false);
   };
 
+  const getValueOfStorageUsed = (userObj: UserType): number => {
+    if (userObj) {
+      const storageUsedPercentage = userObj.imageStorageUsed?.toFixed(1) || 0;
+      return Number(storageUsedPercentage);
+    } else {
+      return 0;
+    }
+  };
+
   if (isLoggedIn === false) {
     return <></>;
   }
@@ -585,13 +595,38 @@ function MyProfilePage() {
                   </div>
                 </div>
               </div>
-              <Button
-                variant="destructive"
-                onClick={() => setShowDeleteAccountPopup(true)}
-              >
-                <IoWarning />
-                Delete Account
-              </Button>
+              <div className="flex flex-row items-center justify-between w-full gap-5">
+                <Button
+                  variant="destructive"
+                  onClick={() => setShowDeleteAccountPopup(true)}
+                >
+                  <IoWarning />
+                  Delete Account
+                </Button>
+                <div className="flex flex-col items-start justify-center w-full text-black gap-1">
+                  <Progress
+                    value={getValueOfStorageUsed(user)}
+                    className="w-full bg-[#4b5085]/20"
+                    indicatorClassName="bg-[#4b5085]"
+                  />
+                  <p className="flex flex-row items-center justify-center gap-[2px]">
+                    Storage: {user.imageStorageUsed?.toFixed(1) || 0} Mb used of
+                    100 Mb
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <IoInformationCircleOutline className="text-black mt-[2px]" />
+                      </TooltipTrigger>
+                      <TooltipContent className="border border-zinc-900">
+                        <p className="text-wrap max-w-[300px] text-sm">
+                          This is my personal project running on free trails for
+                          image storing, hence I have limited the storage for
+                          individual user &#58; &#41;
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </p>
+                </div>
+              </div>
             </div>
           ) : activeSegmentTab === "my-post" ? (
             <div className="flex flex-col items-center justify-center w-full gap-3">

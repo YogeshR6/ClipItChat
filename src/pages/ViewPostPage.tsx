@@ -1,3 +1,4 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -31,6 +32,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { CgProfile } from "react-icons/cg";
 import {
   FaComment,
   FaComments,
@@ -292,6 +294,21 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
               />
               <div className="flex flex-row w-full justify-between items-start">
                 <div className="flex-1 flex flex-col items-start justify-start gap-4">
+                  <div className="flex flex-row gap-3 items-center justify-center border-2 border-white rounded-xl py-1 px-2">
+                    <p className="text-2xl font-semibold">Post by:</p>
+                    <Avatar className="ml-2">
+                      <AvatarImage
+                        src={postData.user?.photoUrl}
+                        alt="profile image"
+                      />
+                      <AvatarFallback className="bg-transparent">
+                        <CgProfile size="25" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <p className="text-2xl font-semibold">
+                      {postData.user?.username}
+                    </p>
+                  </div>
                   <div className="flex flex-row gap-2 items-center justify-center border-2 border-white rounded-xl py-1 px-2">
                     <Tooltip>
                       <TooltipTrigger asChild>

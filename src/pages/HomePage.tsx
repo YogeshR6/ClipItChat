@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { PostType } from "@/types/post";
 import { Cover } from "@/components/ui/cover";
 import { CgProfile } from "react-icons/cg";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const HomePage = () => {
   const router = useRouter();
@@ -75,9 +76,17 @@ const HomePage = () => {
                   className="cursor-pointer"
                 >
                   <p className="font-bold text-xl">{card.selectedGame.name}</p>
-                  <div className="flex flex-row items-center justify-start gap-1">
-                    <CgProfile className="text-white" />
-                    <p className="font-normal text-sm">{card.user?.username}</p>
+                  <div className="flex flex-row items-center justify-start gap-2 mt-2">
+                    <Avatar>
+                      <AvatarImage
+                        src={card.user?.photoUrl || undefined}
+                        alt="profile image"
+                      />
+                      <AvatarFallback className="bg-transparent">
+                        <CgProfile className="text-white" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <p className="font-normal text-lg">{card.user?.username}</p>
                   </div>
                 </DirectionAwareHover>
               ))}
