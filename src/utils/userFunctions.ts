@@ -4,6 +4,8 @@ import {
   collection,
   deleteDoc,
   doc,
+  documentId,
+  getDoc,
   getDocs,
   increment,
   query,
@@ -156,9 +158,16 @@ export const removeUserProfilePic = async (userObj: UserType) => {
 
 export const deleteUserAccountByUserObj = async (userObj: UserType) => {
   try {
+    const userDoc = await getDoc(doc(db, "users", userObj.uid));
+
+    if (!userDoc.exists()) {
+      throw new Error("User not found");
+    }
+
+    const userPostIds = userDoc.data().posts || [];
     const userPostListQ = query(
       collection(db, "posts"),
-      where("user.id", "==", userObj.uid)
+      where(documentId(), "in", userPostIds)
     );
     const userPostList = await getDocs(userPostListQ);
     userPostList.docs.forEach(async (doc) => {

@@ -182,10 +182,7 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
 
     const addUserCommentResponse = await addUserCommentOnPost(
       postData,
-      {
-        id: user.uid,
-        username: user.username || "",
-      },
+      user.uid,
       newComment.trim()
     );
     if (!(addUserCommentResponse instanceof Error)) {
@@ -197,10 +194,8 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
             comments: [
               ...(prevData.comments || []),
               {
-                user: {
-                  id: user.uid,
-                  username: user.username || "",
-                },
+                user: user,
+                authorId: user.uid,
                 comment: newComment.trim(),
                 createdAt: Timestamp.now(),
                 commentUid: addUserCommentResponse,
@@ -342,7 +337,7 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
                       </TooltipContent>
                     </Tooltip>
                   </div>
-                  {user.uid === postData.user.id && (
+                  {user.uid === postData.authorId && (
                     <Button
                       onClick={() => setShowDeletePostConfirmationPopup(true)}
                       variant="destructive"
@@ -384,8 +379,8 @@ const ViewPostPage: React.FC<ViewPostPageProps> = ({ postId }) => {
                       <React.Fragment key={comment.commentUid}>
                         <div className="bg-[#4b5085] rounded-xl flex flex-col justify-center items-start px-3 py-2 w-full">
                           <p className="font-semibold text-xl flex flex-row items-center justify-between w-full">
-                            {comment.user.username || "Anonymous"}
-                            {user.uid === comment.user.id && (
+                            {comment.user?.username || "[Deleted account]"}
+                            {user.uid === comment.authorId && (
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button

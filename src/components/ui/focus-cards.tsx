@@ -11,6 +11,7 @@ import {
   FaComment,
 } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const Card = React.memo(
   ({
@@ -52,8 +53,16 @@ export const Card = React.memo(
           {card.selectedGame.name}
         </div>
         <div className="text-xl md:text-2xl font-medium bg-clip-text text-transparent bg-gradient-to-b from-neutral-50 to-neutral-200 flex flex-row items-center justify-start gap-2">
-          <CgProfile className="text-white" />
-          {card.user?.username}
+          <Avatar>
+            <AvatarImage
+              src={card.user?.photoUrl || undefined}
+              alt="profile image"
+            />
+            <AvatarFallback className="bg-transparent">
+              <CgProfile className="text-white" />
+            </AvatarFallback>
+          </Avatar>
+          {card.user?.username || "[Deleted account]"}
         </div>
         <div className="text-xl md:text-2xl font-medium bg-clip-text text-transparent bg-gradient-to-b from-neutral-50 to-neutral-200 flex flex-row items-center justify-start gap-5">
           <div className="flex flex-row items-center justify-start gap-2">
@@ -65,14 +74,14 @@ export const Card = React.memo(
             {card.likes || 0}
           </div>
           <div className="flex flex-row items-center justify-start gap-2">
-            {!card.comments?.length || card.comments?.length === 0 ? (
+            {!card.noOfComments || card.noOfComments === 0 ? (
               <FaRegComment className="text-white" size="22" />
-            ) : card.comments?.length === 1 ? (
+            ) : card.noOfComments === 1 ? (
               <FaComment className="text-white" size="22" />
             ) : (
               <FaComments className="text-white" size="22" />
             )}
-            {card.comments?.length || 0}
+            {card.noOfComments || 0}
           </div>
         </div>
       </div>

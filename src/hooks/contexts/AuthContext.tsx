@@ -21,7 +21,6 @@ const AuthContext = createContext<AuthContextType>({
     fName: "",
     lName: "",
     username: "",
-    authUid: "",
   },
   setUser: () => {},
   isLoggedIn: null,
@@ -41,7 +40,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fName: "",
     lName: "",
     username: "",
-    authUid: "",
   });
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const [authStateUpdateCheck, setAuthStateUpdateCheck] =
@@ -65,7 +63,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           fName: "",
           lName: "",
           username: "",
-          authUid: "",
         });
         setIsLoggedIn(false);
       }

@@ -26,6 +26,7 @@ import {
   Timestamp,
   updateDoc,
   where,
+  writeBatch,
 } from "firebase/firestore";
 
 export const createNewPostImage = async (
@@ -45,6 +46,7 @@ export const createNewPostImage = async (
       cloudinaryPublicId: publicId,
       selectedGame: selectedGame,
       postSize: Number(size),
+      noOfComments: 0,
     });
     return createNewPostImageResponse.id;
   } catch (error) {
@@ -101,15 +103,23 @@ export const getPostDataByUid = async (
       });
     }
 
-    const enrichedComments = commentsSnapshot.docs.map((commentDoc) => {
-      const commentData = commentDoc.data() as CommentType;
-      const authorData = userProfiles[commentData.authorId] || null;
-      return {
-        ...commentData,
-        commentUid: commentDoc.id,
-        user: authorData,
-      };
-    });
+    const enrichedComments = commentsSnapshot.docs.reduce<CommentType[]>(
+      (acc, commentDoc) => {
+        const commentData = commentDoc.data() as CommentType;
+        const authorData = userProfiles[commentData.authorId] || null;
+
+        if (authorData) {
+          acc.push({
+            ...commentData,
+            commentUid: commentDoc.id,
+            user: authorData,
+          });
+        }
+
+        return acc;
+      },
+      []
+    );
 
     const postData = { ...postDataRaw, postUid: postDoc.id };
     return {
@@ -127,7 +137,18 @@ export const getAllPostsDataByUserUid = async (
   userUid: string
 ): Promise<PostType[] | Error> => {
   try {
-    const q = query(collection(db, "posts"), where("user.id", "==", userUid));
+    const getUserData = await getDoc(doc(db, "users", userUid));
+    if (!getUserData.exists()) {
+      throw new Error("User not found");
+    }
+    const userPostIds = getUserData.data().posts || [];
+    if (userPostIds.length === 0) {
+      return [];
+    }
+    const q = query(
+      collection(db, "posts"),
+      where(documentId(), "in", userPostIds)
+    );
     const postList = await getDocs(q);
     return postList.docs.map((doc) => {
       return { ...(doc.data() as PostType), postUid: doc.id };
@@ -350,7 +371,7 @@ export const deletePostById = async (
     }
     const removeUserPostFromFirestoreResponse =
       await removeUserPostFromFirestore(
-        postData.user?.uid || "",
+        postData.authorId || "",
         postData.postUid,
         postData.postSize || 0
       );
@@ -416,14 +437,22 @@ export const addUserCommentOnPost = async (
 ): Promise<string | Error> => {
   try {
     const postRef = doc(db, "posts", postData.postUid);
-    const commentsRef = collection(postRef, "comments");
+    const newCommentRef = doc(collection(postRef, "comments"));
+
+    const batch = writeBatch(db);
+
     const newComment = {
       authorId: userId,
       comment: comment,
       createdAt: Timestamp.now(),
     };
-    const docRef = await addDoc(commentsRef, newComment);
-    return docRef.id;
+
+    batch.set(newCommentRef, newComment);
+    batch.update(postRef, { noOfComments: increment(1) });
+
+    await batch.commit();
+
+    return newCommentRef.id;
   } catch (error) {
     console.error("Error adding comment on post!", error);
     return new Error("Error adding comment on post!", {
@@ -439,7 +468,14 @@ export const deleteCommentFromPost = async (
   try {
     const postRef = doc(db, "posts", postData.postUid);
     const commentRef = doc(postRef, "comments", commentToRemove.commentUid);
-    await deleteDoc(commentRef);
+
+    const batch = writeBatch(db);
+
+    batch.delete(commentRef); // Delete the comment
+    batch.update(postRef, { noOfComments: increment(-1) });
+
+    await batch.commit();
+
     return true;
   } catch (error) {
     console.error("Error deleting comment on post!", error);

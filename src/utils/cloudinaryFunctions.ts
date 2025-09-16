@@ -86,7 +86,7 @@ export const uploadUserPostImageToCloudinaryAndSaveInfoInFirestore = async (
 
     const newPostId = await createNewPostImage(
       uploadedImageData.secure_url,
-      userObj,
+      userObj.id,
       uploadedImageData.public_id,
       selectedGame,
       uploadedImageData.size

@@ -629,15 +629,14 @@ function MyProfilePage() {
                           {post.likes}
                         </div>
                         <div className="text-black bg-transparent cursor-pointer flex flex-row items-center justify-center text-2xl gap-1 px-2 rounded-xl">
-                          {!post.comments?.length ||
-                          post.comments?.length === 0 ? (
+                          {!post.noOfComments || post.noOfComments === 0 ? (
                             <FaRegComment className="text-black" size="20" />
-                          ) : post.comments?.length === 1 ? (
+                          ) : post.noOfComments === 1 ? (
                             <FaComment className="text-black" size="20" />
                           ) : (
                             <FaComments className="text-black" size="20" />
                           )}
-                          {post.comments?.length || 0}
+                          {post.noOfComments || 0}
                         </div>
                       </div>
                     </div>
@@ -685,15 +684,14 @@ function MyProfilePage() {
                           {post.likes}
                         </div>
                         <div className="text-black bg-transparent cursor-pointer flex flex-row items-center justify-center text-2xl gap-1 px-2 rounded-xl">
-                          {!post.comments?.length ||
-                          post.comments?.length === 0 ? (
+                          {!post.noOfComments || post.noOfComments === 0 ? (
                             <FaRegComment className="text-black" size="20" />
-                          ) : post.comments?.length === 1 ? (
+                          ) : post.noOfComments === 1 ? (
                             <FaComment className="text-black" size="20" />
                           ) : (
                             <FaComments className="text-black" size="20" />
                           )}
-                          {post.comments?.length || 0}
+                          {post.noOfComments || 0}
                         </div>
                       </div>
                     </div>

@@ -77,7 +77,7 @@ const HomePage = () => {
                   <p className="font-bold text-xl">{card.selectedGame.name}</p>
                   <div className="flex flex-row items-center justify-start gap-1">
                     <CgProfile className="text-white" />
-                    <p className="font-normal text-sm">{card.user.username}</p>
+                    <p className="font-normal text-sm">{card.user?.username}</p>
                   </div>
                 </DirectionAwareHover>
               ))}

@@ -13,6 +13,7 @@ export type PostType = {
   likes: number;
   comments?: CommentType[];
   postSize: number;
+  noOfComments: number;
 };
 
 export type CommentType = {
