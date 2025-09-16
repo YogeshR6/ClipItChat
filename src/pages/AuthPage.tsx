@@ -61,7 +61,12 @@ const AuthPage: React.FC = () => {
   const [forgotPasswordEmailInput, setForgotPasswordEmailInput] =
     useState<string>("");
 
-  const lastUsedAuthMethod = localStorage.getItem("lastAuthMethod") || "";
+  const [lastUsedAuthMethod, setLastUsedAuthMethod] = useState<string>("");
+
+  useEffect(() => {
+    const method = localStorage.getItem("lastAuthMethod") || "";
+    setLastUsedAuthMethod(method);
+  }, []);
 
   useEffect(() => {
     setError("");

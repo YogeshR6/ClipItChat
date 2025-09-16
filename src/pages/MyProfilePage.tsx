@@ -606,18 +606,20 @@ function MyProfilePage() {
                   <p className="flex flex-row items-center justify-center gap-[2px]">
                     Storage: {user.imageStorageUsed?.toFixed(1) || 0} Mb used of
                     100 Mb
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <IoInformationCircleOutline className="text-black mt-[2px]" />
-                      </TooltipTrigger>
-                      <TooltipContent className="border border-zinc-900">
-                        <p className="text-wrap max-w-[300px] text-sm">
-                          This is my personal project running on free trails for
-                          image storing, hence I have limited the storage for
-                          individual user &#58; &#41;
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
+                    {isLoggedIn && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <IoInformationCircleOutline className="text-black mt-[2px]" />
+                        </TooltipTrigger>
+                        <TooltipContent className="border border-zinc-900">
+                          <p className="text-wrap max-w-[300px] text-sm">
+                            This is my personal project running on free trails
+                            for image storing, hence I have limited the storage
+                            for individual user &#58; &#41;
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                   </p>
                 </div>
                 <Button
