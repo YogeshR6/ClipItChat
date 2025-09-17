@@ -23,6 +23,8 @@ import {
   getAllPostsDataByUserUid,
 } from "@/utils/postFunctions";
 import {
+  claimUsername,
+  isUsernameAvailable,
   removeUserProfilePic,
   updateUserDetailsInFirestore,
 } from "@/utils/userFunctions";
@@ -199,6 +201,25 @@ function MyProfilePage() {
       return;
     }
     setUploadUserDataLoading(true);
+    if (updatedUserDetails.username !== user.username) {
+      const usernameAvailabilityResponse = await isUsernameAvailable(
+        updatedUserDetails.username
+      );
+      if (usernameAvailabilityResponse) {
+        await claimUsername(
+          user.uid,
+          updatedUserDetails.username,
+          user.username
+        );
+      } else {
+        toast.error("Username already taken!", {
+          duration: 2000,
+          closeButton: true,
+        });
+        setUploadUserDataLoading(false);
+        return;
+      }
+    }
     let finalUpdates: Partial<UserType> = { ...updatedUserDetails };
 
     if (croppedFile) {
