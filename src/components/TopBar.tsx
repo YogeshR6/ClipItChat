@@ -87,6 +87,7 @@ const TopBar: React.FC = () => {
         height={50}
         onClick={() => router.push("/")}
         priority
+        className="cursor-pointer"
       />
       {isLessThanTablet ? (
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>

@@ -267,7 +267,7 @@ function PostsListPage() {
             >
               {game.name}
               <Tooltip>
-                <TooltipTrigger asChild>
+                <TooltipTrigger>
                   <IoClose
                     className="cursor-pointer hover:bg-[#000000] rounded-full"
                     size="20"
