@@ -37,14 +37,9 @@ import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import ReactCrop, { centerCrop, Crop, makeAspectCrop } from "react-image-crop";
 import { toast } from "sonner";
 import { IoClose } from "react-icons/io5";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 const UploadPage: React.FC = () => {
-  const { user, isLoggedIn } = useAuth();
+  const { user, isLoggedIn, setUser } = useAuth();
   const router = useRouter();
   const gameSearchRef = useRef<HTMLInputElement>(null);
   const hasRedirected = useRef(false);
@@ -184,6 +179,11 @@ const UploadPage: React.FC = () => {
         );
       if (!(newPostId instanceof Error)) {
         setUploadPostLoading(false);
+        setUser((prev) => ({
+          ...prev,
+          imageStorageUsed:
+            (prev.imageStorageUsed || 0) + croppedFile.size / 1048576,
+        }));
         router.push(`/posts/${newPostId}`);
       } else {
         toast.error("Something went wrong. Please try again later!", {
@@ -324,21 +324,14 @@ const UploadPage: React.FC = () => {
                 width={500}
                 height={500}
               />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <IoClose
-                    className="absolute bg-gray-500 text-white p-1 rounded-full top-0 right-0"
-                    size="26"
-                    style={{
-                      cursor: uploadPostLoading ? "not-allowed" : "pointer",
-                    }}
-                    onClick={handleRemoveImageClick}
-                  />
-                </TooltipTrigger>
-                <TooltipContent className="border border-zinc-900">
-                  <p>Remove Image</p>
-                </TooltipContent>
-              </Tooltip>
+              <IoClose
+                className="absolute bg-gray-500 text-white p-1 rounded-full top-0 right-0"
+                size="26"
+                style={{
+                  cursor: uploadPostLoading ? "not-allowed" : "pointer",
+                }}
+                onClick={handleRemoveImageClick}
+              />
             </div>
           )
         )}

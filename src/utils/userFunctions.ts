@@ -9,6 +9,7 @@ import {
   getDocs,
   increment,
   query,
+  runTransaction,
   setDoc,
   updateDoc,
   where,
@@ -182,13 +183,21 @@ export const deleteUserAccountByUserObj = async (userObj: UserType) => {
       });
     }
 
-    await Promise.all([
+    const promises = [
       deleteImageStoredInCloudinary(
         userObj.cloudinaryProfilePhotoPublicId || "",
         "profile_photos"
       ),
       deleteDoc(doc(db, "users", userObj.uid)),
-    ]);
+    ];
+
+    if (userObj.username) {
+      promises.push(
+        deleteDoc(doc(db, "usernames", userObj.username.toLowerCase()))
+      );
+    }
+
+    await Promise.all(promises);
     const user = auth.currentUser;
     if (user) {
       await deleteUser(user);
@@ -196,5 +205,39 @@ export const deleteUserAccountByUserObj = async (userObj: UserType) => {
     return true;
   } catch (error) {
     return error as Error;
+  }
+};
+
+export const isUsernameAvailable = async (
+  username: string
+): Promise<boolean> => {
+  const usernameRef = doc(db, "usernames", username.toLowerCase());
+  const docSnap = await getDoc(usernameRef);
+  return !docSnap.exists();
+};
+
+export const claimUsername = async (
+  userId: string,
+  newUsername: string,
+  oldUsername?: string
+): Promise<void> => {
+  const newUsernameRef = doc(db, "usernames", newUsername.toLowerCase());
+  try {
+    await runTransaction(db, async (transaction) => {
+      const newUsernameDoc = await transaction.get(newUsernameRef);
+      if (newUsernameDoc.exists()) {
+        throw new Error("Username is already taken.");
+      }
+
+      if (oldUsername) {
+        const oldUsernameRef = doc(db, "usernames", oldUsername.toLowerCase());
+        transaction.delete(oldUsernameRef);
+      }
+
+      transaction.set(newUsernameRef, { userId: userId });
+    });
+  } catch (error) {
+    console.error("Error claiming username:", error);
+    throw error;
   }
 };
