@@ -453,7 +453,7 @@ function MyProfilePage() {
 
   return (
     <>
-      <div className="flex flex-col items-center justify-center px-2">
+      <div className="flex-1 flex flex-col items-center justify-start px-2 pt-5">
         <div className="w-full sm:w-[80%] lg:w-[50%] flex flex-col items-start justify-start gap-8 bg-white rounded-xl p-1 sm:p-4">
           <div className="rounded-full bg-gray-300 flex flex-row items-center justify-center w-full mt-2 sm:mt-0">
             <MyProfileSegmentControl
