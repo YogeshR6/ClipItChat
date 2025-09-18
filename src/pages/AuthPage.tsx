@@ -244,7 +244,7 @@ const AuthPage: React.FC = () => {
 
   return (
     <>
-      <div className="flex items-center justify-center pt-10 sm:pt-20">
+      <div className="flex-1 flex items-start justify-center pt-10 sm:pt-20">
         <div className="flex flex-col justify-center items-center gap-4 min-w-[96%] sm:min-w-[400px] bg-white rounded-xl p-5">
           <div className="rounded-full bg-gray-300 flex flex-row items-center justify-center w-full">
             <AuthSegmentControl
